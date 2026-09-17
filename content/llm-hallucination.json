@@ -1,0 +1,77 @@
+{
+  "topic_id": "llm-hallucination",
+  "title": "Vì sao LLM bịa (Hallucination)",
+  "source_lecture": "transcript-06",
+  "items": [
+    {
+      "id": "K1",
+      "label": "LLM dự đoán token kế tiếp theo xác suất (similarity score), không \"hiểu\" ngôn ngữ như con người",
+      "source": "T06-136",
+      "keywords": ["next token", "xác suất", "similarity score", "dự đoán"]
+    },
+    {
+      "id": "K2",
+      "label": "Token là đơn vị cơ bản, được biểu diễn thành vectơ trong không gian toán học để tính toán — không phải ký tự hay từ",
+      "source": "T06-134",
+      "keywords": ["token", "vectơ", "embedding", "không gian toán học"]
+    },
+    {
+      "id": "K3",
+      "label": "Cơ chế self-attention cho phép mỗi token nhìn song song các token khác để tính điểm tương đồng, nhờ đó xử lý nhanh và không quên ngữ cảnh dài",
+      "source": "T06-135",
+      "keywords": ["self-attention", "song song", "similarity score", "ngữ cảnh"]
+    },
+    {
+      "id": "K4",
+      "label": "Dữ liệu huấn luyện đã có bias sẵn (nội dung trên internet, quan điểm người viết), qua fine-tuning và RLHF vẫn có bias từ chuyên gia — nên hallucination là không thể tránh hoàn toàn",
+      "source": "T06-138",
+      "keywords": ["bias", "dữ liệu", "huấn luyện", "RLHF", "hallucination"]
+    },
+    {
+      "id": "K5",
+      "label": "Knowledge cutoff: mô hình chỉ biết kiến thức đến thời điểm được huấn luyện, không biết sự kiện xảy ra sau đó",
+      "source": "T06-148",
+      "keywords": ["knowledge cutoff", "giới hạn", "thời gian", "cập nhật"]
+    },
+    {
+      "id": "K6",
+      "label": "Context window giới hạn lượng token mô hình có thể xử lý đồng thời — vượt ngưỡng thì bắt đầu quên và hallucinate",
+      "source": "T06-149",
+      "keywords": ["context window", "giới hạn", "quên", "token"]
+    },
+    {
+      "id": "K7",
+      "label": "Temperature điều chỉnh mức sáng tạo: gần 0 thì chặt chẽ (ít random), lên 1 thì random token cao hơn — dùng sai temperature sẽ tăng hallucination",
+      "source": "T06-136",
+      "keywords": ["temperature", "sáng tạo", "random", "chặt chẽ"]
+    }
+  ],
+  "misconceptions": [
+    {
+      "id": "M1",
+      "label": "Nghĩ LLM có cơ sở dữ liệu tra cứu bên trong giống Google Search",
+      "evidence_turn_ids": ["T01922", "T00842"],
+      "note": "Nhiều học viên hỏi 'hallucination trong AI là gì vậy' cho thấy chưa hiểu bản chất xác suất"
+    },
+    {
+      "id": "M2",
+      "label": "Nghĩ LLM đọc và hiểu văn bản từng ký tự/từng từ giống con người",
+      "evidence_turn_ids": ["T00207", "T00393"],
+      "note": "Câu hỏi '1 token là 1 vector hay gì' và 'giải thích kỹ cơ chế transformer' cho thấy học viên chưa phân biệt token vs ký tự vs từ"
+    },
+    {
+      "id": "M3",
+      "label": "Nghĩ nếu prompt đủ tốt thì LLM sẽ luôn trả lời đúng 100%",
+      "evidence_turn_ids": ["T00850", "T00320"],
+      "note": "Câu hỏi 'làm thế nào để phân loại output vào correct, safe fallback hay hallucinated?' và yêu cầu tutor 'trả lời trung thực, không nói sai chức năng'"
+    }
+  ],
+  "excerpts": {
+    "T06-134": "Đơn vị cơ bản của LLM là cái nãy giờ chúng ta gọi là token. Quá trình huấn luyện dữ liệu đầu vào trước đây chủ yếu dùng tiếng Anh, bởi vậy logic của nó vẫn đi từ trái sang phải.",
+    "T06-135": "Cái LLM nó không đọc ký tự các bạn nhá. Cái đầu tiên các bạn cần nhớ: nó không đọc ký tự trái sang phải, cũng không đọc word by word, mà nó đọc token... cơ chế tự chú ý: token này chú ý và tự đánh giá ra điểm similarity score, từ đó đoán từ kế tiếp.",
+    "T06-136": "Quá trình dự báo next token: cái LLM nó không hiểu ngôn ngữ giống con người nhá, mà nó chỉ dự đoán token nào có xác suất cao nhất — hay còn gọi là similarity score.",
+    "T06-138": "LLM có thể sai, và trên thực tế không bao giờ có chuyện đúng 100%. Vì sao nó sai? Phần lớn dữ liệu được tạo ra trên internet thì ít nhiều có bias bên trong... tất cả dữ liệu đầu vào đã có bias.",
+    "T06-148": "Bất lợi đầu tiên là knowledge cutoff: bao giờ nó cũng có cái mốc chặn trên về mặt tri thức của nhân loại được input vào. Ví dụ giả sử tại thời điểm tháng 5 năm 2026, chúng ta hỏi AI đội nào vô địch World Cup 2026 thì nó không trả lời được.",
+    "T06-149": "Giới hạn thứ hai là hallucination. Cái thứ ba là context window: mô hình chỉ nhìn được một lượng nhất định... nhu cầu con người là vô hạn, cho nên thay vì 10.000 chúng ta nói lên 1 tỷ sách. Thế thì làm thế nào để mô hình không quên — chính là cái context window này."
+  }
+}
