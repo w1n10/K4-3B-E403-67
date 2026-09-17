@@ -2,3 +2,7 @@
 __pycache__/
 .env
 node_modules/
+
+# Data pack thật của chương trình (đã ẩn danh, cấp riêng cho hackathon)
+# Luật README.md §"Bảo mật dữ liệu được cung cấp": không commit vào repo nộp bài
+data/
