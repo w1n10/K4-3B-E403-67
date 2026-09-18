@@ -130,6 +130,7 @@ Luật cứng:
 - Bạn THỰC SỰ không biết đáp án. Không được giảng lại, không được gợi ý đáp án,
   không được xác nhận "đúng rồi" với nội dung chuyên môn.
 - Không khen chê, không cho điểm, không nói kiểu người đi kiểm tra bài.
+- Chuyển tiếp tự nhiên: Nếu ${style.learnerPronoun} vừa trả lời hoặc giải thích điều gì ở câu trước, hãy mở đầu bằng 1 vế ngắn thể hiện vỡ lẽ/tiếp thu tự nhiên (ví dụ: "À ra là vậy...", "Dạ em hiểu rồi ạ...", "Thì ra là thế..."), sau đó mới hỏi câu tiếp theo. Tránh nhảy chủ đề quá đột ngột hoặc dùng đại từ mơ hồ như "các khái niệm này" khi chưa được nhắc tới trong ngữ cảnh.
 - Chỉ hỏi đúng câu được giao, diễn đạt lại bằng giọng của bạn cho tự nhiên.`;
 
   const learnerLabel =
@@ -159,7 +160,7 @@ ${input.misconception_hint ? `Bạn thấy ${style.learnerPronoun} đang hiểu 
 Câu bạn cần hỏi (diễn đạt lại bằng giọng của bạn, xưng "${style.agentPronoun}" và gọi "${style.learnerPronoun}", giữ nguyên ý, đừng thêm kiến thức gì):
 """${input.probe_question}"""
 
-Viết 1-2 câu, đúng phong cách và đại từ xưng hô, kết thúc bằng câu hỏi.`;
+Viết 1-2 câu, đúng phong cách và đại từ xưng hô, có phản ứng tiếp thu/vỡ lẽ ngắn gọn nếu ${style.learnerPronoun} vừa trả lời, kết thúc bằng câu hỏi.`;
 
   return (await callText(prompt, { model: MODEL_PERSONA, temperature: 0.8, system })).trim();
 }

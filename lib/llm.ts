@@ -5,8 +5,8 @@
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 
-export const MODEL_EVALUATOR = ANTHROPIC_KEY ? "claude-sonnet-5" : "gemini-2.5-flash";
-export const MODEL_PERSONA = ANTHROPIC_KEY ? "claude-haiku-4-5-20251001" : "gemini-2.5-flash";
+export const MODEL_EVALUATOR = ANTHROPIC_KEY ? "claude-sonnet-5" : "gemini-3.6-flash";
+export const MODEL_PERSONA = ANTHROPIC_KEY ? "claude-haiku-4-5-20251001" : "gemini-3.6-flash";
 
 type CallOpts = { model: string; temperature: number; system?: string; json?: boolean };
 

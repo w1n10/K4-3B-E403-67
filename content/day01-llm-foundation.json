@@ -1,0 +1,123 @@
+{
+  "topic_id": "day01-llm-foundation",
+  "title": "Day 1 — AI & LLM Foundation: cách LLM hoạt động",
+  "source_lecture": "transcript-04",
+  "starter_questions": [
+    "Chào bạn! Mình nghe bảo LLM thực chất chỉ là cỗ máy dự đoán token tiếp theo dựa trên xác suất, chứ không hề có tư duy hay tra cứu sự thật. Vậy tại sao câu từ nó sinh ra lại mạch lạc và thuyết phục như người thật viết thế hả bạn?",
+    "Chào bạn! Mình cứ nghĩ context window của mô hình càng to thì càng xịn, cứ nhét hết toàn bộ sách vở tài liệu vào là xong. Nhưng tài liệu lại nói nhét nhiều quá sẽ bị context rot và phản tác dụng. Chỗ này là sao hả bạn?",
+    "Chào bạn! Mình nghe giảng viên nhắc đến hai tham số là Temperature và Top-p khi gọi API mô hình. Hai thông số này khác nhau thế nào trong việc quyết định độ ngẫu nhiên của câu trả lời vậy bạn?",
+    "Chào bạn! Mình nghe nói cùng một nội dung nhưng nếu xử lý bằng tiếng Việt thì lại tốn nhiều token và tiền API hơn hẳn so với tiếng Anh. Tại sao máy tính lại phân chia token như vậy hả bạn?"
+  ],
+  "items": [
+    {
+      "id": "K1",
+      "label": "AI bao trùm machine learning, machine learning bao trùm deep learning, trong cùng là generative AI — các tầng là tập con lồng nhau và công nghệ đi từ ngoài vào trong",
+      "source": "T04-015",
+      "keywords": [
+        "AI",
+        "machine learning",
+        "deep learning",
+        "generative AI"
+      ]
+    },
+    {
+      "id": "K2",
+      "label": "LLM chỉ dự đoán token tiếp theo theo xác suất rồi nối vào chuỗi và lặp lại — nó không tra cứu sự thật, nên sinh ra câu nghe hợp lý nhưng vẫn sai (hallucination)",
+      "source": "T04-048",
+      "keywords": [
+        "next token",
+        "xác suất",
+        "hallucination",
+        "ảo giác"
+      ]
+    },
+    {
+      "id": "K3",
+      "label": "Token là đơn vị cơ bản của máy, không phải ký tự hay từ; cùng một nội dung tiếng Việt tốn nhiều token hơn tiếng Anh nên dùng API đắt hơn",
+      "source": "T04-049",
+      "keywords": [
+        "token",
+        "tiếng Việt",
+        "chi phí"
+      ]
+    },
+    {
+      "id": "K4",
+      "label": "Context window là giới hạn lượng token mô hình xử lý một lúc; nhét quá nhiều ngữ cảnh còn làm model kém đi và quên phần đầu (context rot), nên không phải cứ lớn là tốt",
+      "source": "T04-052",
+      "keywords": [
+        "context window",
+        "context rot",
+        "quên"
+      ]
+    },
+    {
+      "id": "K5",
+      "label": "Cơ chế attention cho mô hình nhìn cả câu và tự tính mức liên quan giữa các từ, thay vì đọc tuần tự từng chữ như RNN nên không bị quên đầu câu",
+      "source": "T04-040",
+      "keywords": [
+        "attention",
+        "transformer",
+        "RNN"
+      ]
+    },
+    {
+      "id": "K6",
+      "label": "Temperature quyết định độ ngẫu nhiên khi chọn token (bằng 0 thì luôn lấy xác suất cao nhất), còn top-k/top-p chỉ khoanh vùng số token được phép chọn — hai thứ khác nhau",
+      "source": "T04-072",
+      "keywords": [
+        "temperature",
+        "top-k",
+        "top-p",
+        "sampling"
+      ]
+    },
+    {
+      "id": "K7",
+      "label": "Mô hình vẫn luôn cần con người tham gia đánh giá và gán nhãn dữ liệu (RLHF) để tốt lên, không tự thông minh lên một mình",
+      "source": "T04-060",
+      "keywords": [
+        "RLHF",
+        "gán nhãn",
+        "human feedback"
+      ]
+    }
+  ],
+  "misconceptions": [
+    {
+      "id": "M1",
+      "label": "Nghĩ temperature và top-k/top-p là một — đều là \"chọn token xác suất cao\", không phân biệt khoanh vùng lựa chọn với độ ngẫu nhiên",
+      "evidence_turn_ids": [
+        "T12581",
+        "T11581"
+      ],
+      "note": "Học viên hỏi việc chỉ chọn token xác suất cao nhất ảnh hưởng thế nào tới tính ngẫu nhiên, và hỏi lại tập nucleus của top-p"
+    },
+    {
+      "id": "M2",
+      "label": "Nghĩ context window càng lớn thì mô hình càng tốt, không biết thông tin ở đầu/giữa dễ bị bỏ qua (context rot)",
+      "evidence_turn_ids": [
+        "T11073",
+        "T09976"
+      ],
+      "note": "Học viên hỏi làm sao để model weight cao phần context ở giữa thay vì tìm cách giảm ngữ cảnh"
+    },
+    {
+      "id": "M3",
+      "label": "Nghĩ mô hình nhiều tham số luôn mạnh hơn trong mọi việc, không phân biệt mô hình lớn đa dụng với mô hình nhỏ chuyên biệt",
+      "evidence_turn_ids": [
+        "T09278"
+      ],
+      "note": "Học viên so sánh model 2800 tỷ tham số với model 100 tỷ chuyên code và hỏi khác gì nhau"
+    }
+  ],
+  "excerpts": {
+    "T04-015": "Rộng nhất chúng ta có AI... Vòng bên trong là machine learning... Vòng tiếp theo bên trong là deep learning... Và tầng bên trong cùng là tầng của generative AI.",
+    "T04-040": "Thay vì lần lượt đọc và dịch từng chữ một, nó sẽ đọc cả cụm đấy, và nhận diện được đâu là những cụm từ có sự liên quan đến nhau, để nhận diện ra được mối liên kết giữa nhiều từ trong một câu.",
+    "T04-048": "Bản chất nó chỉ là một cỗ máy, nó sinh ra và tự động nối cái từ tiếp theo vào thôi... Thế nên đấy là một lý do khiến cho văn bản AI sinh ra nhìn trông rất là có lý, nhưng mà thực ra cái thông tin nó sai.",
+    "T04-049": "Nó sẽ là một đơn vị tính — nó không phải là từ, không phải là chữ cái, mà nó là token... máy nói chuyện với nhau bằng ngôn ngữ của token.",
+    "T04-052": "Khi bạn càng đưa nhiều thông tin, càng đưa nhiều ngữ cảnh, thì cái mô hình càng ngày về sau nó sẽ càng kém đi, và nó sẽ thường quên những thông tin ở lúc đầu.",
+    "T04-060": "Bản chất tất cả những mô hình ngôn ngữ lớn bây giờ, mặc dù nó đã đạt đến mức năng lực như vậy rồi, nhưng nó vẫn luôn cần con người tham gia vào việc huấn luyện các dữ liệu đấy.",
+    "T04-072": "Nếu temperature bằng 0, mô hình sẽ luôn luôn lấy xác suất cao nhất... Nhưng khi bạn tăng temperature lên, nó sẽ random rộng hơn trong phạm vi đấy. Còn top-k/top-p là để khoanh vùng để lấy trong bao nhiêu."
+  }
+}

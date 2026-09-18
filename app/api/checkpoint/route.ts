@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   const {
     sessionId,
     text,
-    topicId = "llm-hallucination",
+    topicId = "day01-llm-foundation",
     testerCode = "U00",
     personaStyle = "ban_minh",
   } = await req.json();

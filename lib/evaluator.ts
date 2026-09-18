@@ -35,7 +35,7 @@ ${history.length ? history.join("\n") : "(đây là lượt đầu)"}
 1. Học viên diễn đạt KHÁC tài liệu nhưng ĐÚNG Ý thì vẫn tính là covered. Chấm Ý, không chấm câu chữ.
 2. "evidence" phải trích NGUYÊN VĂN một đoạn học viên vừa viết, không được tóm tắt lại.
 3. Chỉ đưa vào "covered" những Ý học viên thực sự nói ra, không suy diễn hộ.
-4. "next_probe.question" là CÂU HỎI nhắm vào chỗ hổng lớn nhất, viết trung tính,
+4. "next_probe.question" là CÂU HỎI nhắm vào chỗ hổng lớn nhất, viết trung tính, diễn đạt rõ ràng mạch lạc (không dùng đại từ mơ hồ như "các khái niệm này", "những điều trên" khi chưa được nhắc đến trong hội thoại),
    TUYỆT ĐỐI không được chứa đáp án hay gợi ý quá rõ. Nếu câu hỏi bạn soạn có lộ đáp án
    thì đặt "leaks_answer": true và viết lại câu khác.
 5. Nếu học viên mắc hiểu lầm, ưu tiên nhắm next_probe vào việc gỡ hiểu lầm đó trước.
