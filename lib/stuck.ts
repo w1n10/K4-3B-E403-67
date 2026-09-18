@@ -26,16 +26,16 @@ export function isNoProgress(verdict: Stage0Verdict | null | undefined): boolean
 }
 
 /** Số lượt "không tiến bộ" liên tiếp ở cuối phiên. */
-export function noProgressStreak(turns: TurnRecord[]): number {
+export function noProgressStreak(turns: TurnRecord[], initialTarget?: string): number {
   let streak = 0;
-  let openTarget: string | undefined;
+  let openTarget: string | undefined = initialTarget;
 
   for (const t of turns) {
     if (isNoProgress(t.stage0_verdict)) {
       streak += 1;
       continue; // không có lượt chấm mới nên openTarget giữ nguyên
     }
-    if (!t.stage1_json) continue; // chặn vì lý do khác / lỗi: trung tính
+    if (!t.stage1_json || t.stage2_reply?.startsWith("[STAGE")) continue; // chặn vì lý do khác / lỗi: trung tính
 
     const covered = t.stage1_json.covered.map((c) => c.id);
     if (openTarget && !covered.includes(openTarget)) streak += 1;

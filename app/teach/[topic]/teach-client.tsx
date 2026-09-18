@@ -18,12 +18,14 @@ export default function TeachClient({
   title,
   items,
   initialQuestion,
+  initialTarget,
   personaStyle = "ban_minh",
 }: {
   topicId: string;
   title: string;
   items: Item[];
   initialQuestion?: string;
+  initialTarget?: string;
   personaStyle?: PersonaStyleId;
 }) {
   const { t } = useT();
@@ -107,6 +109,8 @@ export default function TeachClient({
           topicId,
           testerCode: testerCode || "U00", // effect chưa kịp chạy thì vẫn có mã mặc định
           personaStyle,
+          initialQuestion,
+          initialTarget,
         }),
       });
       const data = await res.json();
@@ -118,7 +122,24 @@ export default function TeachClient({
       if (data.reply) setTurns((m) => [...m, { role: "agent", text: data.reply }]);
       if (data.done) setDone(true);
     } catch (e) {
-      setError((e as Error).message);
+      // Rollback tin nhắn vừa gửi khỏi UI để không bị hiển thị lặp
+      setTurns((m) => m.slice(0, -1));
+      // Điền lại câu vừa gõ vào ô input để người học không phải gõ lại từ đầu
+      setInput(text);
+
+      const rawMsg = (e as Error).message || "";
+      if (
+        rawMsg.includes("503") ||
+        rawMsg.includes("429") ||
+        rawMsg.includes("quá tải") ||
+        rawMsg.includes("502") ||
+        rawMsg.includes("high demand") ||
+        rawMsg.includes("overloaded")
+      ) {
+        setError("Máy chủ AI đang có lưu lượng truy cập cao trong giây lát. Bạn bấm 'Gửi' lại nhé!");
+      } else {
+        setError(rawMsg);
+      }
     } finally {
       setLoading(false);
     }

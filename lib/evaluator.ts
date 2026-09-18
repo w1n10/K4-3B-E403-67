@@ -5,14 +5,24 @@
 import { callJSON, MODEL_EVALUATOR } from "./llm";
 import type { Stage1Output, Topic } from "./types";
 
-export const PROMPT_VERSION = "eval-v1";
+export const PROMPT_VERSION = "eval-v2";
 
-function buildPrompt(text: string, topic: Topic, coveredIds: string[], history: string[]): string {
+function buildPrompt(
+  text: string,
+  topic: Topic,
+  coveredIds: string[],
+  history: string[],
+  currentTarget?: string
+): string {
   const remaining = topic.items.filter((i) => !coveredIds.includes(i.id));
+  const targetItem = currentTarget ? topic.items.find((i) => i.id === currentTarget) : undefined;
 
   return `Bạn là bộ chấm của một hệ thống học tập. Học viên đang DẠY LẠI một khái niệm cho agent.
 Nhiệm vụ: đối chiếu lời giải thích của học viên với checklist kiến thức, rồi soạn câu hỏi moi tiếp.
 
+${targetItem ? `## Câu hỏi của Agent ở lượt trước đang nhắm vào Ý mục tiêu:
+- ${targetItem.id}: ${targetItem.label}  [nguồn ${targetItem.source}]
+(Chú ý: đây là câu hỏi mà Agent vừa đặt ra và đang đợi học viên giải thích!)\n` : ""}
 ## Checklist các Ý còn thiếu
 ${remaining.map((i) => `- ${i.id}: ${i.label}  [nguồn ${i.source}]`).join("\n")}
 
@@ -35,10 +45,14 @@ ${history.length ? history.join("\n") : "(đây là lượt đầu)"}
 1. Học viên diễn đạt KHÁC tài liệu nhưng ĐÚNG Ý thì vẫn tính là covered. Chấm Ý, không chấm câu chữ.
 2. "evidence" phải trích NGUYÊN VĂN một đoạn học viên vừa viết, không được tóm tắt lại.
 3. Chỉ đưa vào "covered" những Ý học viên thực sự nói ra, không suy diễn hộ.
-4. "next_probe.question" là CÂU HỎI nhắm vào chỗ hổng lớn nhất, viết trung tính, diễn đạt rõ ràng mạch lạc (không dùng đại từ mơ hồ như "các khái niệm này", "những điều trên" khi chưa được nhắc đến trong hội thoại),
-   TUYỆT ĐỐI không được chứa đáp án hay gợi ý quá rõ. Nếu câu hỏi bạn soạn có lộ đáp án
-   thì đặt "leaks_answer": true và viết lại câu khác.
-5. Nếu học viên mắc hiểu lầm, ưu tiên nhắm next_probe vào việc gỡ hiểu lầm đó trước.
+4. QUY TẮC QUAN TRỌNG VỀ "next_probe":
+${targetItem ? `   - Nếu học viên CHƯA giải thích đúng Ý mục tiêu "${targetItem.id}" (kể cả khi học viên nói đúng một Ý khác trong checklist):
+     BẮT BUỘC "next_probe.target" PHẢI LÀ "${targetItem.id}"! TUYỆT ĐỐI KHÔNG ĐƯỢC tự ý nhảy sang hỏi Ý khác.
+     "next_probe.question" phải tiếp tục hỏi sâu, gợi mở hoặc kéo học viên quay lại trả lời Ý "${targetItem.id}".
+     (Nếu học viên vừa nói đúng một ý khác, hãy ghi nhận ý đó vào "covered", nhưng câu hỏi tiếp theo phải nhắc học viên trả lời câu hỏi còn dang dở về "${targetItem.id}").
+   - CHỈ KHI học viên ĐÃ giải thích đúng Ý "${targetItem.id}" (được đưa vào "covered"), thì "next_probe.target" mới được chuyển sang một Ý còn thiếu khác trong checklist.` : `   - "next_probe.question" là CÂU HỎI nhắm vào chỗ hổng lớn nhất, viết trung tính, diễn đạt rõ ràng mạch lạc (không dùng đại từ mơ hồ như "các khái niệm này", "những điều trên" khi chưa được nhắc đến trong hội thoại).`}
+5. "next_probe.question" TUYỆT ĐỐI không được chứa đáp án hay gợi ý quá rõ. Nếu câu hỏi bạn soạn có lộ đáp án thì đặt "leaks_answer": true và viết lại câu khác.
+6. Nếu học viên mắc hiểu lầm, ưu tiên nhắm next_probe vào việc gỡ hiểu lầm đó trước.
 
 Trả về DUY NHẤT một object JSON đúng schema:
 {
@@ -46,7 +60,7 @@ Trả về DUY NHẤT một object JSON đúng schema:
   "missing": ["K2", "K3"],
   "misconception": [{"id": "M1", "student_said": "trích nguyên văn", "source": "T06-136"}],
   "paraphrase_ok": true,
-  "next_probe": {"target": "K2", "question": "...", "leaks_answer": false}
+  "next_probe": {"target": "${targetItem ? targetItem.id : "K2"}", "question": "...", "leaks_answer": false}
 }`;
 }
 
@@ -54,10 +68,11 @@ export async function evaluate(
   text: string,
   topic: Topic,
   coveredIds: string[],
-  history: string[] = []
+  history: string[] = [],
+  currentTarget?: string
 ): Promise<Stage1Output> {
   const out = await callJSON<Omit<Stage1Output, "coverage">>(
-    buildPrompt(text, topic, coveredIds, history),
+    buildPrompt(text, topic, coveredIds, history, currentTarget),
     { model: MODEL_EVALUATOR, temperature: 0 }
   );
 

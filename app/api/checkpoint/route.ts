@@ -45,23 +45,29 @@ type State = {
 };
 
 /** Dựng lại state phiên từ các lượt đã ghi trong DB. */
-function rebuildState(prev: SessionWithTurns | null): State {
-  const turns = prev?.turns ?? [];
+function rebuildState(prev: SessionWithTurns | null, initialQuestion?: string): State {
+  const allTurns = prev?.turns ?? [];
+
+  // Lượt lỗi hạ tầng (503/429/model timeout) không tính vào số lượt thoại hợp lệ của học viên
+  const validTurns = allTurns.filter((t) => !t.stage2_reply?.startsWith("[STAGE"));
 
   // coveredIds cộng dồn: đã ghi sẵn ở covered_after của lượt gần nhất.
-  const coveredIds = turns.at(-1)?.covered_after ?? [];
+  const coveredIds = validTurns.at(-1)?.covered_after ?? [];
 
   // Misconception còn mở = danh sách ở lượt CHẤM gần nhất. Lượt bị Stage 0 chặn
   // có stage1_json = null nên phải bỏ qua, không thì tưởng đã gỡ hết.
-  const lastEval = [...turns].reverse().find((t) => t.stage1_json)?.stage1_json ?? null;
+  const lastEval = [...validTurns].reverse().find((t) => t.stage1_json)?.stage1_json ?? null;
   const openMisconceptions = lastEval?.misconception.map((m) => m.id) ?? [];
 
-  const history = turns.flatMap((t) => [
-    { role: "student" as const, text: t.student_text },
-    ...(t.stage2_reply ? [{ role: "agent" as const, text: t.stage2_reply }] : []),
-  ]);
+  const history = [
+    ...(initialQuestion && validTurns.length === 0 ? [{ role: "agent" as const, text: initialQuestion }] : []),
+    ...validTurns.flatMap((t) => [
+      { role: "student" as const, text: t.student_text },
+      ...(t.stage2_reply ? [{ role: "agent" as const, text: t.stage2_reply }] : []),
+    ]),
+  ];
 
-  return { coveredIds, openMisconceptions, turnIndex: turns.length + 1, history };
+  return { coveredIds, openMisconceptions, turnIndex: validTurns.length + 1, history };
 }
 
 /** Trang slide để client mở, nếu Ý có gắn slide. Không có thì client tự ẩn. */
@@ -78,6 +84,8 @@ export async function POST(req: NextRequest) {
     testerCode = "U00",
     personaStyle = "ban_minh",
     giveUp = false,
+    initialQuestion,
+    initialTarget,
   } = await req.json();
 
   // Không đặt mặc định một chủ đề cụ thể: có nhiều chủ đề, đoán bừa thì phiên
@@ -102,12 +110,12 @@ export async function POST(req: NextRequest) {
     sid = await db.createSession(testerCode, topicId, MODEL_EVALUATOR, PROMPT_VERSION);
   }
 
-  const st = rebuildState(prev);
+  const st = rebuildState(prev, initialQuestion);
 
   // Chuỗi "không tiến bộ" tính từ các lượt đã ghi trong DB — sống sót qua serverless.
   const prevTurns = prev?.turns ?? [];
-  const priorStreak = noProgressStreak(prevTurns);
-  const prevProbTarget = lastProbedTarget(prevTurns);
+  const priorStreak = noProgressStreak(prevTurns, initialTarget);
+  const prevProbTarget = lastProbedTarget(prevTurns) || initialTarget;
 
   // ---- Học viên chủ động bỏ cuộc ----
   if (giveUp) {
@@ -183,7 +191,8 @@ export async function POST(req: NextRequest) {
       text,
       topic,
       st.coveredIds,
-      st.history.slice(-5).map((h) => `${h.role}: ${h.text}`)
+      st.history.slice(-5).map((h) => `${h.role}: ${h.text}`),
+      prevProbTarget
     );
   } catch (e) {
     // Vẫn ghi lượt lỗi: đây chính là case "hành vi khi sai" đáng giá nhất cho CP3.
@@ -195,6 +204,26 @@ export async function POST(req: NextRequest) {
   // ---- ORCHESTRATOR: gộp state ----
   const coveredIds = [...new Set([...st.coveredIds, ...ev.covered.map((c) => c.id)])];
   const openMisconceptions = ev.misconception.map((m) => m.id);
+
+  // LUẬT SƯ PHẠM: Học viên trả lời không đúng câu hỏi (prevProbTarget),
+  // dù có vô tình trúng 1 Ý khác trong checklist thì cũng KHÔNG được nhảy sang câu khác!
+  // Giữ nguyên next_probe.target là prevProbTarget và kéo học viên về câu hỏi đang dang dở.
+  if (prevProbTarget && !coveredIds.includes(prevProbTarget)) {
+    const targetDidDrift = ev.next_probe?.target !== prevProbTarget;
+    ev.next_probe.target = prevProbTarget;
+    const lastAgentMsg = [...st.history].reverse().find((h) => h.role === "agent")?.text;
+    const otherCovered = ev.covered.filter((c) => c.id !== prevProbTarget);
+
+    if (otherCovered.length > 0) {
+      if (lastAgentMsg) {
+        ev.next_probe.question = `Ý vừa rồi bạn giải thích thì mình hiểu rồi nè. Nhưng câu lúc nãy mình đang hỏi là: "${lastAgentMsg}". Bạn giải thích giúp mình câu này trước được không?`;
+      }
+    } else if (targetDidDrift || !ev.next_probe.question) {
+      if (lastAgentMsg) {
+        ev.next_probe.question = `Câu trả lời vừa rồi có vẻ chưa đúng trọng tâm câu hỏi của mình. Bạn giải thích lại giúp mình câu hỏi lúc nãy nhé: "${lastAgentMsg}"`;
+      }
+    }
+  }
 
   const coverage = coveredIds.length / topic.items.length;
   const passed = coverage >= COVERAGE_TO_PASS && openMisconceptions.length === 0;
