@@ -27,7 +27,15 @@ export type Topic = {
 
 // ---------- STAGE 0 ----------
 
-export type Stage0Verdict = "verbatim_copy" | "asked_ai" | "low_effort";
+export type Stage0Verdict =
+  | "verbatim_copy"
+  | "asked_ai"
+  | "low_effort"
+  // Trả lời cụt kiểu "ừ" / "đúng rồi": hợp lệ trong đối thoại nhưng chưa có nội dung
+  // để chấm -> agent hỏi tiếp "vì sao", KHÔNG gọi AI.
+  | "short_affirm"
+  // Trả lời cụt kiểu "không" / "sai": agent hỏi ngược "sao lại không".
+  | "short_negate";
 
 export type Stage0Result =
   | { blocked: false }

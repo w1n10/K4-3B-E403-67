@@ -12,26 +12,31 @@ const GIVE_UP = ["không biết", "ko biết", "ko bit", "chịu", "chiu", "bó 
 const ASK_ANSWER_RE =
   /(cho|nói|giải thích|trả lời|chỉ)\s*(tôi|mình|tao|em)?\s*(đáp án|câu trả lời|luôn đi|đi|với)/i;
 
-// Các câu phản hồi/xác nhận ngắn hợp lệ trong đối thoại Feynman
-const SHORT_AFFIRMATIONS = new Set([
+// Xác nhận ngắn — hợp lệ trong đối thoại Feynman nhưng CHƯA CÓ NỘI DUNG để chấm.
+// Tách "đúng" và "không" ra hai nhóm vì agent phải hỏi lại theo hai kiểu khác nhau.
+const SHORT_YES = new Set([
   "đúng", "đúng vậy", "đúng rồi", "đúng thế", "đúng nè", "đúng nha", "chuẩn", "chuẩn rồi",
-  "chuẩn luôn", "chính xác", "phải rồi", "phải", "không phải", "sai rồi", "không đúng",
-  "chưa đúng", "sai", "ừ", "vâng", "dạ", "ừ đúng", "ừ chuẩn", "uhm", "yes", "no", "ok", "okay"
+  "chuẩn luôn", "chính xác", "phải rồi", "phải", "ừ", "ừ đúng", "ừ chuẩn", "uhm", "um",
+  "vâng", "dạ", "yes", "ok", "okay", "oke", "okê",
+]);
+
+const SHORT_NO = new Set([
+  "không", "ko", "khong", "không phải", "ko phải", "không đúng", "ko đúng",
+  "chưa đúng", "sai", "sai rồi", "no", "nope",
 ]);
 
 function words(s: string): string[] {
   return s.toLowerCase().replace(/[.,!?;:"'()\[\]]/g, " ").split(/\s+/).filter(Boolean);
 }
 
-function isShortAffirmation(text: string): boolean {
-  const clean = text
+function normalize(text: string): string {
+  return text
     .trim()
     .toLowerCase()
     .replace(/^[.,!?;:\s]+|[.,!?;:\s]+$/g, "")
     .replace(/[.,!?;:]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  return SHORT_AFFIRMATIONS.has(clean);
 }
 
 /** Trượt cửa sổ COPY_WINDOW từ, xem có khớp đoạn nào trong excerpts không. */
@@ -56,15 +61,15 @@ function isAskingAI(text: string): boolean {
   return sentences.length <= 1;
 }
 
+// Lượt đầu phải giải thích tử tế (15 từ). Từ lượt 2 trở đi đang đối thoại nên
+// câu ngắn hơn là bình thường — nhưng KHÔNG thể là 1 từ, vì agent lúc nào cũng
+// kết bằng "?" nên ngưỡng quá thấp sẽ vô hiệu hoá guard ở mọi lượt sau.
+const MIN_WORDS_IN_DIALOGUE = 4;
+
 function isLowEffort(text: string, isReplyingToAgent = false): boolean {
   const t = text.trim().toLowerCase();
   if (GIVE_UP.some((g) => t === g || t.startsWith(g))) return true;
-  if (isShortAffirmation(text)) return false;
-  if (isReplyingToAgent) {
-    // Khi đang đối thoại trả lời bot ở các lượt sau, chỉ chặn nếu câu rỗng hoặc bỏ cuộc
-    return words(text).length < 1;
-  }
-  return words(text).length < MIN_WORDS;
+  return words(text).length < (isReplyingToAgent ? MIN_WORDS_IN_DIALOGUE : MIN_WORDS);
 }
 
 export function getGuardReply(verdict: Stage0Verdict, style: PersonaStyleId = "ban_minh"): string {
@@ -76,6 +81,10 @@ export function getGuardReply(verdict: Stage0Verdict, style: PersonaStyleId = "b
         return "Tôi không biết nên mới nhờ con vợ chỉ mà! Hay con vợ xem lại tài liệu rồi chỉ tôi đi nè?";
       case "low_effort":
         return "Con vợ bắt đầu từ chỗ nào cũng được, ném ra một ý thôi cũng được mà. Con vợ nhớ được gì về cái này?";
+      case "short_affirm":
+        return "Ừ thì ừ, nhưng mà vì sao lại thế hả con vợ? Giải thích cho tôi nghe cái coi!";
+      case "short_negate":
+        return "Ơ sao lại không? Vậy đúng ra là sao hả con vợ, nói tôi nghe với!";
     }
   }
   if (style === "senpai_em") {
@@ -86,6 +95,10 @@ export function getGuardReply(verdict: Stage0Verdict, style: PersonaStyleId = "b
         return "Em chưa biết nên mới nhờ senpai chỉ dạy mà! Hay senpai xem lại tài liệu rồi giảng cho em nghe nha senpai?";
       case "low_effort":
         return "Senpai bắt đầu từ chỗ nào cũng được ạ, kể cả chỉ một ý nhỏ thôi. Senpai nhớ được gì về cái này ạ?";
+      case "short_affirm":
+        return "Dạ vâng ạ, nhưng mà vì sao lại như thế hả senpai? Senpai giải thích thêm cho em với ạ?";
+      case "short_negate":
+        return "Ơ không ạ? Vậy thì đúng ra phải thế nào hả senpai, senpai chỉ em với ạ?";
     }
   }
   if (style === "thay_em") {
@@ -96,6 +109,10 @@ export function getGuardReply(verdict: Stage0Verdict, style: PersonaStyleId = "b
         return "Dạ em chưa rõ nên mới nhờ thầy chỉ dạy ạ! Thầy xem lại bài rồi giảng cho em nghe với ạ.";
       case "low_effort":
         return "Dạ thầy bắt đầu từ chỗ nào cũng được ạ, chỉ cần một ý thôi. Thầy nhớ được điểm mấu chốt nào về phần này ạ?";
+      case "short_affirm":
+        return "Dạ vâng ạ, nhưng vì sao lại như vậy hả thầy? Thầy giảng thêm cho em hiểu với ạ.";
+      case "short_negate":
+        return "Dạ không ạ? Vậy đúng ra là thế nào hả thầy, thầy chỉ cho em với ạ?";
     }
   }
 
@@ -115,6 +132,14 @@ export function getGuardReply(verdict: Stage0Verdict, style: PersonaStyleId = "b
       return (
         "Bạn bắt đầu từ chỗ nào cũng được, kể cả chỉ một ý thôi cũng được mà. " +
         "Bạn nhớ được gì về cái này?"
+      );
+    case "short_affirm":
+      return (
+        "Ừ nhưng mà vì sao lại thế nhỉ? Bạn giải thích thêm cho mình hiểu với?"
+      );
+    case "short_negate":
+      return (
+        "Ơ sao lại không nhỉ? Vậy đúng ra là thế nào, bạn nói cho mình nghe với?"
       );
   }
 }
@@ -139,6 +164,16 @@ export function runGuard(
       reply: getGuardReply("asked_ai", style),
     };
   }
+  // Trả lời cụt "ừ" / "không": hợp lệ về mặt hội thoại nhưng không có nội dung nào
+  // để Stage 1 chấm. Hỏi ngược ngay tại đây, không tốn lời gọi AI nào.
+  const clean = normalize(text);
+  if (SHORT_YES.has(clean)) {
+    return { blocked: true, verdict: "short_affirm", reply: getGuardReply("short_affirm", style) };
+  }
+  if (SHORT_NO.has(clean)) {
+    return { blocked: true, verdict: "short_negate", reply: getGuardReply("short_negate", style) };
+  }
+
   const lastAgentMsg = [...history].reverse().find((m) => m.role === "agent");
   const isReplyingToAgent = Boolean(lastAgentMsg && lastAgentMsg.text.trim().endsWith("?"));
 
