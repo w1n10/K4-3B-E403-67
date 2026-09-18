@@ -1,1 +1,123 @@
 @import "tailwindcss";
+
+/* ───────────────────────────────────────────────────────────
+   Bảng màu: Malibu Escape (pastel)
+   #FFD3D6  #FFE5E7  #F9DCC0  #FFC6CA  #F9E6E4  #FFB0B5
+
+   6 màu gốc đều rất sáng -> chỉ dùng cho NỀN / VIỀN / TRẠNG THÁI.
+   Chữ và nút chính dùng 2 tông rose đậm đào thêm từ #FFB0B5,
+   nếu không thì chữ trắng trên hồng pastel chỉ đạt ~1.8:1, không đọc được.
+   ─────────────────────────────────────────────────────────── */
+
+:root {
+  --page: #fff6f6;
+  --surface: #ffffff;
+  --surface-2: #f9e6e4;
+  --border: #ffd3d6;
+  --border-strong: #ffc6ca;
+
+  --fg: #4a2c30;
+  --fg-muted: #8a6167;
+
+  --primary: #c25c66;
+  --primary-hover: #a94953;
+  --primary-fg: #ffffff;
+
+  /* ý đã giảng được */
+  --ok-bg: #ffe5e7;
+  --ok-border: #ffb0b5;
+  --ok-fg: #8e3b44;
+
+  /* hiểu lầm còn vướng — dùng tông đào để tách hẳn khỏi hồng */
+  --warn-bg: #f9dcc0;
+  --warn-border: #eec79b;
+  --warn-fg: #7d5426;
+
+  --danger-bg: #ffe5e7;
+  --danger-border: #ffb0b5;
+  --danger-fg: #a13a44;
+}
+
+[data-theme="dark"] {
+  --page: #1f1517;
+  --surface: #2a1e21;
+  --surface-2: #33252a;
+  --border: #453136;
+  --border-strong: #5a3f45;
+
+  --fg: #ffe5e7;
+  --fg-muted: #c9a7ab;
+
+  --primary: #ffb0b5;
+  --primary-hover: #ffc6ca;
+  --primary-fg: #3a1f23;
+
+  --ok-bg: #3e2429;
+  --ok-border: #8a5159;
+  --ok-fg: #ffd3d6;
+
+  --warn-bg: #38291b;
+  --warn-border: #7a5f3c;
+  --warn-fg: #f9dcc0;
+
+  --danger-bg: #3d2125;
+  --danger-border: #8a4a52;
+  --danger-fg: #ffc6ca;
+}
+
+html {
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--page);
+  color: var(--fg);
+  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Dấu tiếng Việt cao hơn chữ Latin -> nới dòng để dấu không chạm dòng trên */
+  line-height: 1.6;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+}
+
+/* Thanh cuộn khung chat — luôn hiện để người dùng biết còn nội dung phía trên,
+   nhưng mảnh và hợp tông hồng thay vì thanh xám mặc định của hệ điều hành. */
+.chat-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.chat-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.chat-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+  background-clip: content-box;
+}
+
+/* Trình duyệt mặc định cursor:default cho <button>, không phải pointer. */
+button:not(:disabled),
+a,
+[role="button"] {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}

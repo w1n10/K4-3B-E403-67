@@ -44,6 +44,9 @@ function isLowEffort(text: string): boolean {
   return words(text).length < MIN_WORDS;
 }
 
+// Lời thoại của agent LUÔN tiếng Việt, không đổi theo toggle EN/VI của giao diện —
+// toggle đó chỉ đổi nhãn nút, tiêu đề, chú thích. Tài liệu gốc là tiếng Việt nên
+// bắt bạn học nói tiếng Anh sẽ lệch hẳn với nội dung học viên đang giảng.
 export function runGuard(text: string, topic: Topic): Stage0Result {
   if (isVerbatimCopy(text, topic)) {
     return {

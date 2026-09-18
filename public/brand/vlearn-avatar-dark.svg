@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    
+    <!-- Pastel Background Gradient -->
+    <linearGradient id="bgPastel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF8F8"/>
+      <stop offset="35%" stop-color="#FFE5E7"/>
+      <stop offset="70%" stop-color="#FFD3D6"/>
+      <stop offset="100%" stop-color="#F9DCC0"/>
+    </linearGradient>
+
+    <!-- Dark Luxury Background Gradient -->
+    <linearGradient id="bgDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2D1710"/>
+      <stop offset="50%" stop-color="#1F0D07"/>
+      <stop offset="100%" stop-color="#140703"/>
+    </linearGradient>
+
+    <!-- Deep Espresso Gradient for Max Contrast -->
+    <linearGradient id="darkEspresso" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3E2016"/>
+      <stop offset="40%" stop-color="#26130C"/>
+      <stop offset="100%" stop-color="#140804"/>
+    </linearGradient>
+
+    <!-- Vibrant Coral-Peach Ribbon Gradient -->
+    <linearGradient id="coralPeach" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF6B7A"/>
+      <stop offset="45%" stop-color="#FF9EA7"/>
+      <stop offset="85%" stop-color="#FFC6CA"/>
+      <stop offset="100%" stop-color="#F9DCC0"/>
+    </linearGradient>
+
+    <!-- Glowing AI Sparkle Gradient -->
+    <linearGradient id="sparkleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF5264"/>
+      <stop offset="50%" stop-color="#FFA48F"/>
+      <stop offset="100%" stop-color="#FDE1C5"/>
+    </linearGradient>
+
+    <!-- Border Stroke Gradient -->
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="50%" stop-color="#FFC6CA" stop-opacity="0.75"/>
+      <stop offset="100%" stop-color="#F9DCC0" stop-opacity="0.85"/>
+    </linearGradient>
+
+    <!-- Drop Shadow Filters -->
+    <filter id="shadowElevated" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#26130C" flood-opacity="0.18"/>
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#26130C" flood-opacity="0.12"/>
+    </filter>
+
+    <filter id="shadowCoral" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#FF6B7A" flood-opacity="0.32"/>
+    </filter>
+
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="24" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+
+  </defs>
+
+  <!-- Background Dark Luxury Squircle -->
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="url(#bgDark)"/>
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="none" stroke="#FFC6CA" stroke-width="2.5" stroke-opacity="0.4"/>
+
+  <!-- Glowing Aura -->
+  <circle cx="256" cy="240" r="160" fill="#FF8A95" opacity="0.18" filter="url(#softGlow)"/>
+  <circle cx="390" cy="110" r="80" fill="#F9DCC0" opacity="0.2" filter="url(#softGlow)"/>
+
+  <!-- Scaled Centered Emblem (Dark Mode optimized) -->
+  <g transform="translate(76, 70) scale(1.5)">
+    
+  <!-- EMBLEM GROUP (V + Book + AI Star) -->
+  <g class="vlearn-emblem" filter="url(#shadowElevated)">
+    <!-- Base Open Knowledge Arc / Book Pages -->
+    <path d="M 40 182 
+             C 75 198, 105 198, 120 184 
+             C 135 198, 165 198, 200 182
+             C 192 195, 155 208, 120 196
+             C 85 208, 48 195, 40 182 Z" 
+          fill="url(#coralPeach)" opacity="0.85"/>
+
+    <!-- Neural Learning Loop (Dotted Synapse Line) -->
+    <path d="M 52 176 Q 120 204 188 176" 
+          fill="none" stroke="#FFA8B0" stroke-width="2.5" stroke-dasharray="2 5" stroke-linecap="round" opacity="0.9"/>
+    
+    <!-- LEFT PILLAR of 'V' (Knowledge Spine - Deep Espresso for Bold Contrast) -->
+    <!-- Solid base shadow layer -->
+    <path d="M 48 42
+             C 38 42, 32 52, 37 62
+             L 106 178
+             C 112 188, 128 188, 134 178
+             L 150 152
+             L 100 60
+             C 95 50, 84 42, 70 42
+             Z"
+          fill="#FFF2F2"/>
+
+    <!-- Inner 3D Bevel Highlight on Left Stem -->
+    <path d="M 46 50 L 112 168" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+
+    <!-- RIGHT PILLAR of 'V' (Adaptive AI Flame / Ribbon - Coral-Peach Gradient) -->
+    <g filter="url(#shadowCoral)">
+      <path d="M 106 178
+               C 112 188, 128 188, 134 178
+               L 194 62
+               C 199 52, 191 42, 180 42
+               C 169 42, 159 49, 154 58
+               L 120 126
+               L 96 160
+               Z"
+            fill="url(#coralPeach)"/>
+    </g>
+
+    <!-- Intersecting Mobius Learning Fold (Apex Connection) -->
+    <path d="M 106 178 L 134 178 L 120 152 Z" fill="#FF5264" opacity="0.95"/>
+
+    <!-- TEACHABLE AI SPARKLE (4-Point Brilliant Star) -->
+    <g transform="translate(196, 38)" filter="url(#shadowCoral)">
+      <path d="M 0 -22 
+               Q 0 0, 22 0 
+               Q 0 0, 0 22 
+               Q 0 0, -22 0 
+               Q 0 0, 0 -22 Z" 
+            fill="url(#sparkleGrad)"/>
+      <circle cx="0" cy="0" r="4.5" fill="#FFFFFF"/>
+    </g>
+
+    <!-- Teachable Feedback Sparkle (Small Insight Star) -->
+    <g transform="translate(34, 105)">
+      <path d="M 0 -11 Q 0 0, 11 0 Q 0 0, 0 11 Q 0 0, -11 0 Q 0 0, 0 -11 Z" 
+            fill="url(#coralPeach)" opacity="0.9"/>
+      <circle cx="0" cy="0" r="2" fill="#FFFFFF"/>
+    </g>
+
+    <!-- Synapse Data Nodes -->
+    <circle cx="48" cy="184" r="4" fill="#FFFFFF"/>
+    <circle cx="120" cy="196" r="4.5" fill="#FF6B7A"/>
+    <circle cx="192" cy="184" r="4" fill="#F9DCC0"/>
+  </g>
+
+  </g>
+
+  <!-- Brand Typography -->
+  <text x="256" y="426" 
+        font-family="system-ui, -apple-system, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif" 
+        font-size="28" 
+        font-weight="900" 
+        letter-spacing="7" 
+        fill="#FFE5E7" 
+        text-anchor="middle">VLEARN</text>
+  
+  <text x="256" y="454" 
+        font-family="system-ui, -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif" 
+        font-size="13" 
+        font-weight="700" 
+        letter-spacing="4.5" 
+        fill="#FFB0B5" 
+        text-anchor="middle">TEACHABLE LEARNER</text>
+</svg>
