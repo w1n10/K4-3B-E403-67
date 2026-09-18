@@ -1,7 +1,7 @@
 import json
 import os
 
-workspace_dir = r"e:\AI In Action\Hackathon\K4-3B-E403-67"
+workspace_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "evidence")
 json_path = os.path.join(workspace_dir, "lecture_slide_part_statistics.json")
 
 with open(json_path, 'r', encoding='utf-8') as f:

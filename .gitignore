@@ -3,6 +3,14 @@ __pycache__/
 .env
 node_modules/
 
+# Next.js — sản phẩm build, sinh lại được, không commit
+.next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+.vercel
+
 # Data pack thật của chương trình (đã ẩn danh, cấp riêng cho hackathon)
 # Luật README.md §"Bảo mật dữ liệu được cung cấp": không commit vào repo nộp bài
 data/
