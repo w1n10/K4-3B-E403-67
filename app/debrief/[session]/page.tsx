@@ -25,6 +25,12 @@ export default async function DebriefPage({ params }: { params: Promise<{ sessio
     })
   );
 
+  const uncovered = topic.items.filter((i) => !covered.has(i.id));
+
+  // Phiên dừng vì kẹt (đã nhắc xem slide): KHÔNG gửi label của Ý còn thiếu xuống client,
+  // kể cả trong payload RSC — ẩn ở UI thôi là vẫn đọc được qua DevTools.
+  const hiddenTodo = s.exit_reason === "stuck" && uncovered.length > 0;
+
   const data: DebriefData = {
     topicId: s.topic_id,
     topicTitle: topic.title,
@@ -32,9 +38,8 @@ export default async function DebriefPage({ params }: { params: Promise<{ sessio
     turnCount: s.turns.length,
     totalItems: topic.items.length,
     done: topic.items.filter((i) => covered.has(i.id)).map((i) => ({ id: i.id, label: i.label })),
-    todo: topic.items
-      .filter((i) => !covered.has(i.id))
-      .map((i) => ({ id: i.id, label: i.label, source: i.source })),
+    hiddenTodo,
+    todo: hiddenTodo ? [] : uncovered.map((i) => ({ id: i.id, label: i.label, source: i.source })),
     // Đường học: số ý phủ được sau từng lượt — chỉ số về HỌC, không phải "AI trả lời đúng".
     curve: s.turns.map((t) => t.covered_after.length),
     misconceptions: [...seen].map(([id, label]) => ({ id, label, open: stillOpen.has(id) })),

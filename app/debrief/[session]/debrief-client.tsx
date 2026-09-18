@@ -14,6 +14,7 @@ export type DebriefData = {
   turnCount: number;
   totalItems: number;
   done: { id: string; label: string }[];
+  hiddenTodo: boolean;
   todo: { id: string; label: string; source: string }[];
   curve: number[];
   misconceptions: { id: string; label: string; open: boolean }[];
@@ -23,6 +24,7 @@ const EXIT_KEY: Record<string, Key> = {
   completed: "debrief.completed",
   turn_cap: "debrief.turn_cap",
   gave_up: "debrief.gave_up",
+  stuck: "debrief.stuck",
 };
 
 export default function DebriefClient({ d }: { d: DebriefData }) {
@@ -88,8 +90,27 @@ export default function DebriefClient({ d }: { d: DebriefData }) {
         </ul>
       </Section>
 
-      {/* ----- Chỗ cần ôn lại ----- */}
-      {d.todo.length > 0 && (
+      {/* ----- Chỗ cần ôn lại -----
+          Phiên kết thúc vì kẹt (đã nhắc xem slide): KHÔNG liệt kê các Ý còn thiếu
+          để không lộ đáp án — chỉ mời mở lại slide của bài. */}
+      {d.hiddenTodo && (
+        <Section title={t("debrief.todo")}>
+          <p className="text-sm leading-relaxed" style={{ color: "var(--fg-muted)" }}>
+            {t("debrief.todoHidden")}
+          </p>
+          <Link
+            href={`/slides/${d.topicId}`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-block rounded-lg px-4 py-2 text-xs font-medium no-underline"
+            style={{ background: "var(--primary)", color: "var(--primary-fg)" }}
+          >
+            {t("debrief.openSlides")}
+          </Link>
+        </Section>
+      )}
+
+      {!d.hiddenTodo && d.todo.length > 0 && (
         <Section title={t("debrief.todo")}>
           <ul className="space-y-2">
             {d.todo.map((i) => (

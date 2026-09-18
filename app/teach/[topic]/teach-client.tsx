@@ -48,6 +48,8 @@ export default function TeachClient({
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Khi agent nhắc xem slide: { page, title } để hiện nút mở trang slide đúng trang.
+  const [slideHint, setSlideHint] = useState<{ page: number; title?: string } | null>(null);
 
   // Lời thoại của agent LUÔN tiếng Việt, không theo toggle EN/VI — toggle chỉ đổi
   // nhãn nút và tiêu đề. Giữ giống hệt các câu do Stage 0/Stage 2 sinh ra ở backend.
@@ -78,6 +80,7 @@ export default function TeachClient({
 
     setInput("");
     setError(null);
+    setSlideHint(null);
     setTurns((m) => [...m, { role: "student", text }]);
     setLoading(true);
 
@@ -98,6 +101,7 @@ export default function TeachClient({
 
       setSessionId(data.sessionId);
       setCoveredIds(data.coveredIds ?? []);
+      setSlideHint(data.slide ?? null);
       if (data.reply) setTurns((m) => [...m, { role: "agent", text: data.reply }]);
       if (data.done) setDone(true);
     } catch (e) {
@@ -270,6 +274,25 @@ export default function TeachClient({
           >
             {error}
           </p>
+        )}
+
+        {/* Agent nhắc xem lại bài giảng: mở tab riêng để phiên chat không mất state. */}
+        {slideHint && !done && (
+          <div
+            className="mt-3 rounded-xl border p-3 text-sm"
+            style={{ borderColor: "var(--border)", background: "var(--surface-2)", color: "var(--fg)" }}
+          >
+            <p>{t("teach.slideHint")}</p>
+            <Link
+              href={`/slides/${topicId}?page=${slideHint.page}`}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-block rounded-lg px-4 py-2 text-xs font-medium no-underline"
+              style={{ background: "var(--primary)", color: "var(--primary-fg)" }}
+            >
+              {t("teach.slideCta", { page: slideHint.page })}
+            </Link>
+          </div>
         )}
 
         <div className="mt-3 flex gap-2">

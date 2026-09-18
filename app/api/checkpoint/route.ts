@@ -12,9 +12,24 @@ import { loadTopic } from "@/lib/content";
 import { runGuard } from "@/lib/guard";
 import { evaluate, PROMPT_VERSION } from "@/lib/evaluator";
 import { speak } from "@/lib/persona";
+import {
+  END_AT,
+  getReviewHint,
+  getWrapUp,
+  HINT_AT,
+  lastProbedTarget,
+  noProgressStreak,
+  pickReviewTarget,
+} from "@/lib/stuck";
 import { db } from "@/lib/db";
 import { MODEL_EVALUATOR } from "@/lib/llm";
-import type { PersonaStyleId, SessionWithTurns, Stage1Output, TurnRecord } from "@/lib/types";
+import type {
+  ChecklistItem,
+  PersonaStyleId,
+  SessionWithTurns,
+  Stage1Output,
+  TurnRecord,
+} from "@/lib/types";
 
 const TURN_CAP = 8;
 const COVERAGE_TO_PASS = 5 / 7;
@@ -46,6 +61,11 @@ function rebuildState(prev: SessionWithTurns | null): State {
   ]);
 
   return { coveredIds, openMisconceptions, turnIndex: turns.length + 1, history };
+}
+
+/** Trang slide để client mở, nếu Ý có gắn slide. Không có thì client tự ẩn. */
+function slideRef(item: ChecklistItem | undefined) {
+  return item?.slide_page ? { page: item.slide_page, title: item.slide_title } : undefined;
 }
 
 export async function POST(req: NextRequest) {
@@ -83,6 +103,11 @@ export async function POST(req: NextRequest) {
 
   const st = rebuildState(prev);
 
+  // Chuỗi "không tiến bộ" tính từ các lượt đã ghi trong DB — sống sót qua serverless.
+  const prevTurns = prev?.turns ?? [];
+  const priorStreak = noProgressStreak(prevTurns);
+  const prevProbTarget = lastProbedTarget(prevTurns);
+
   // ---- Học viên chủ động bỏ cuộc ----
   if (giveUp) {
     await db.endSession(sid, st.coveredIds.length / topic.items.length, "gave_up");
@@ -107,6 +132,38 @@ export async function POST(req: NextRequest) {
   // ---- STAGE 0: chặn trước, 0 token ----
   const guard = runGuard(text, topic, st.history, style);
   if (guard.blocked) {
+    // Bỏ cuộc tính là "không tiến bộ"; verdict khác (dán nguyên văn, hỏi ngược) trung tính.
+    const streak = guard.verdict === "low_effort" ? priorStreak + 1 : priorStreak;
+
+    if (guard.verdict === "low_effort" && streak >= END_AT) {
+      // Đã nhắc xem slide mà vẫn bỏ cuộc tiếp -> dừng phiên, cho xem tổng kết.
+      const targetItem = pickReviewTarget(topic, st.coveredIds, prevProbTarget);
+      const reply = getWrapUp(style);
+      await logTurn({ stage0_verdict: guard.verdict, stage2_reply: reply });
+      await db.endSession(sid, st.coveredIds.length / topic.items.length, "stuck");
+      return NextResponse.json({
+        sessionId: sid,
+        reply,
+        coveredIds: st.coveredIds,
+        done: true,
+        slide: slideRef(targetItem),
+      });
+    }
+
+    if (guard.verdict === "low_effort" && streak === HINT_AT) {
+      // Lần thứ 3 bỏ cuộc -> mời mở đúng slide rồi quay lại, chưa dừng phiên.
+      const targetItem = pickReviewTarget(topic, st.coveredIds, prevProbTarget);
+      const reply = getReviewHint(topic, targetItem, style);
+      await logTurn({ stage0_verdict: guard.verdict, stage2_reply: reply });
+      return NextResponse.json({
+        sessionId: sid,
+        reply,
+        coveredIds: st.coveredIds,
+        done: false,
+        slide: slideRef(targetItem),
+      });
+    }
+
     await logTurn({ stage0_verdict: guard.verdict, stage2_reply: guard.reply });
     return NextResponse.json({
       sessionId: sid,
@@ -144,6 +201,40 @@ export async function POST(req: NextRequest) {
     await logTurn({ stage1_json: ev, covered_after: coveredIds });
     await db.endSession(sid, coverage, passed ? "completed" : "turn_cap");
     return NextResponse.json({ sessionId: sid, reply: null, coveredIds, done: true });
+  }
+
+  // ---- KẸT ----
+  // Lượt này "không tiến bộ" nếu không nói được Ý mà câu hỏi vừa rồi nhắm vào.
+  const progressed = prevProbTarget ? ev.covered.some((c) => c.id === prevProbTarget) : true;
+  const streak = progressed ? 0 : priorStreak + 1;
+
+  if (streak >= END_AT) {
+    // Đã nhắc xem slide mà vẫn sai thêm 2 lần -> dừng phiên, cho xem tổng kết.
+    const targetItem = pickReviewTarget(topic, coveredIds, prevProbTarget, ev.next_probe?.target);
+    const reply = getWrapUp(style);
+    await logTurn({ stage1_json: ev, covered_after: coveredIds, stage2_reply: reply });
+    await db.endSession(sid, coverage, "stuck");
+    return NextResponse.json({
+      sessionId: sid,
+      reply,
+      coveredIds,
+      done: true,
+      slide: slideRef(targetItem),
+    });
+  }
+
+  if (streak === HINT_AT) {
+    // Lần thứ 3 không tiến bộ -> nhắc xem slide, chưa dừng phiên.
+    const targetItem = pickReviewTarget(topic, coveredIds, prevProbTarget, ev.next_probe?.target);
+    const reply = getReviewHint(topic, targetItem, style);
+    await logTurn({ stage1_json: ev, covered_after: coveredIds, stage2_reply: reply });
+    return NextResponse.json({
+      sessionId: sid,
+      reply,
+      coveredIds,
+      done: false,
+      slide: slideRef(targetItem),
+    });
   }
 
   // ---- STAGE 2: khoác giọng. Chỉ nhận CÂU HỎI, không nhận đáp án ----

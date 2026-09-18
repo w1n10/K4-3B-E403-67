@@ -2,6 +2,8 @@
   "topic_id": "day02-xac-dinh-bai-toan-kinh-doanh-cho-ai",
   "title": "Day 2 — Xác định bài toán kinh doanh cho AI",
   "source_lecture": "transcript-01",
+  "slide_file": "d2-slide-hackathon.pdf",
+  "slide_pages": 29,
   "starter_questions": [
     "Chào bạn! Sếp mình vừa bảo 'Hãy làm một con AI Chatbot hỗ trợ khách hàng', nhưng bài học lại bảo không được nhảy thẳng vào giải pháp mà phải dùng Five Whys để tìm vấn đề thực sự. Tại sao lại phải làm như vậy hả bạn?",
     "Chào bạn! Mình nghe bảo khi áp dụng AI vào doanh nghiệp thì có tới 70% thành công đến từ con người và vận hành chứ không phải công nghệ. Chỗ này nghĩa là sao và doanh nghiệp hay mắc sai lầm gì hả bạn?",
@@ -23,6 +25,8 @@
       "id": "K2",
       "label": "Đề bài thường mơ hồ (vd \"làm AI chatbot support\"); phải đào ra vấn đề thật phía sau bằng Five Whys thay vì nhảy thẳng vào giải pháp",
       "source": "T01-032",
+      "slide_page": 4,
+      "slide_title": "Diamond 1 — Tìm đúng vấn đề",
       "keywords": [
         "Five Whys",
         "đề bài mơ hồ",
@@ -33,6 +37,8 @@
       "id": "K3",
       "label": "Double Diamond có hai pha phân kỳ rồi hội tụ: viên một để tìm đúng vấn đề, viên hai để tìm đúng giải pháp; làm đúng cái sai nguy hiểm hơn làm sai cái đúng",
       "source": "T01-049",
+      "slide_page": 3,
+      "slide_title": "Tìm đúng vấn đề trước khi tìm giải pháp",
       "keywords": [
         "Double Diamond",
         "phân kỳ",
@@ -54,6 +60,8 @@
       "id": "K5",
       "label": "Cách chắc nhất để có insight là quan sát người dùng thật và dogfooding — tự làm người dùng đầu tiên của sản phẩm mình",
       "source": "T01-042",
+      "slide_page": 4,
+      "slide_title": "Diamond 1 — Tìm đúng vấn đề",
       "keywords": [
         "dogfooding",
         "quan sát",
@@ -64,6 +72,8 @@
       "id": "K6",
       "label": "Phải định lượng bài toán và viết thành problem statement: đối tượng, workflow hiện tại, nút thắt, chỉ số thành công (tiết kiệm bao nhiêu thời gian/tiền)",
       "source": "T02-018",
+      "slide_page": 11,
+      "slide_title": "Định lượng hóa bài toán",
       "keywords": [
         "problem statement",
         "định lượng",
@@ -74,6 +84,8 @@
       "id": "K7",
       "label": "Chọn mức tự động hoá theo phổ automation–augmentation: bắt đầu từ augmentation (người giám sát) rồi mới tăng dần; việc có hậu quả lớn phải giữ con người trong vòng lặp",
       "source": "T02-033",
+      "slide_page": 17,
+      "slide_title": "Automation vs Augmentation",
       "keywords": [
         "automation",
         "augmentation",
