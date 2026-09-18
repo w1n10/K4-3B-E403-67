@@ -60,6 +60,10 @@
       <feComposite in="SourceGraphic" in2="blur" operator="over"/>
     </filter>
 
+    <!-- Cắt mọi vệt sáng trang trí theo đúng hình thẻ bo góc -->
+    <clipPath id="cardClip">
+      <rect x="5" y="5" width="950" height="250" rx="28"/>
+    </clipPath>
   </defs>
 
   <!-- Outer Dark Banner Card -->
@@ -67,8 +71,10 @@
   <rect x="5" y="5" width="950" height="250" rx="28" fill="none" stroke="#FFC6CA" stroke-width="2" stroke-opacity="0.3"/>
 
   <!-- Ambient Light Orbs -->
-  <circle cx="150" cy="130" r="140" fill="#FF8A95" opacity="0.14" filter="url(#softGlow)"/>
-  <circle cx="850" cy="180" r="130" fill="#F9DCC0" opacity="0.16" filter="url(#softGlow)"/>
+  <g clip-path="url(#cardClip)">
+    <circle cx="150" cy="130" r="140" fill="#FF8A95" opacity="0.14" filter="url(#softGlow)"/>
+    <circle cx="850" cy="180" r="130" fill="#F9DCC0" opacity="0.16" filter="url(#softGlow)"/>
+  </g>
 
   <!-- LEFT: LOGO EMBLEM -->
   <g transform="translate(45, 30)">

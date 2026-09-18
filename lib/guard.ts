@@ -134,8 +134,11 @@ export function getGuardReply(verdict: Stage0Verdict, style: PersonaStyleId = "b
         "Bạn nhớ được gì về cái này?"
       );
     case "short_affirm":
+      // KHÔNG mở bằng "Ừ" — persona này là người ĐANG NHỜ GIẢNG, gật đầu cụt lủn
+      // nghe như bề trên cho qua, sai hẳn vai.
       return (
-        "Ừ nhưng mà vì sao lại thế nhỉ? Bạn giải thích thêm cho mình hiểu với?"
+        "Ừm… nhưng mà mình vẫn chưa hiểu vì sao lại thế. " +
+        "Bạn giải thích thêm cho mình với?"
       );
     case "short_negate":
       return (

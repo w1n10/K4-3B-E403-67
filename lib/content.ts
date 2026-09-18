@@ -19,7 +19,17 @@ export function loadTopic(topicId: string): Topic {
   return topic;
 }
 
-export function listTopics(): { topic_id: string; title: string }[] {
+export type TopicSummary = {
+  topic_id: string;
+  title: string;
+  itemCount: number;
+  misconceptionCount: number;
+  sourceLecture: string;
+};
+
+/** Tóm tắt cho trang chủ. KHÔNG trả items/excerpts — đó là đáp án, để lộ ra
+ *  client là học viên mở DevTools đọc được. Chỉ trả con số đếm. */
+export function listTopics(): TopicSummary[] {
   const dir = path.join(process.cwd(), "content");
   if (!fs.existsSync(dir)) return [];
   return fs
@@ -27,6 +37,12 @@ export function listTopics(): { topic_id: string; title: string }[] {
     .filter((f) => f.endsWith(".json"))
     .map((f) => {
       const t = JSON.parse(fs.readFileSync(path.join(dir, f), "utf-8")) as Topic;
-      return { topic_id: t.topic_id, title: t.title };
+      return {
+        topic_id: t.topic_id,
+        title: t.title,
+        itemCount: t.items?.length ?? 0,
+        misconceptionCount: t.misconceptions?.length ?? 0,
+        sourceLecture: t.source_lecture ?? "",
+      };
     });
 }

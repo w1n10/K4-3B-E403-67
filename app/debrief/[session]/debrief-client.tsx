@@ -4,6 +4,7 @@
 // Đây là chỗ DUY NHẤT được hiện coverage — trong lúc học thì không, vì luật an toàn D3
 // cấm tạo cảm giác bị chấm điểm ngầm. Ở đây phiên đã xong nên hiện là đúng lúc.
 
+import { useState } from "react";
 import Link from "next/link";
 import { useT, type Key } from "@/lib/i18n";
 
@@ -13,8 +14,7 @@ export type DebriefData = {
   exitReason: string | null;
   turnCount: number;
   totalItems: number;
-  done: { id: string; label: string }[];
-  todo: { id: string; label: string; source: string }[];
+  points: { id: string; label: string; source: string; covered: boolean }[];
   curve: number[];
   misconceptions: { id: string; label: string; open: boolean }[];
 };
@@ -27,23 +27,47 @@ const EXIT_KEY: Record<string, Key> = {
 
 export default function DebriefClient({ d }: { d: DebriefData }) {
   const { t } = useT();
+  // Ý chưa giảng được mặc định để mờ; học viên tự bấm mới hiện.
+  const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const openCount = d.misconceptions.filter((m) => m.open).length;
+
+  const coveredCount = d.points.filter((p) => p.covered).length;
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
-      <p className="text-sm" style={{ color: "var(--fg-muted)" }}>
-        {d.topicTitle}
-      </p>
-      <h1 className="mt-1 text-2xl font-semibold">
-        {t(EXIT_KEY[d.exitReason ?? ""] ?? "debrief.ended")}
-      </h1>
+      {/* ----- Thẻ tổng quan: vòng tiến độ + kết quả + số liệu phụ ----- */}
+      <section
+        className="fade-up relative overflow-hidden rounded-2xl border p-6"
+        style={{ borderColor: "var(--border)", background: "var(--surface)" }}
+      >
+        {/* quầng màu mềm ở góc, cắt theo thẻ nhờ overflow-hidden */}
+        <div
+          className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full"
+          style={{ background: "var(--ok-bg)", filter: "blur(48px)" }}
+        />
 
-      {/* ----- Tổng quan ----- */}
-      <div className="mt-6 grid grid-cols-3 gap-3">
-        <Stat value={`${d.done.length}/${d.totalItems}`} label={t("debrief.statCovered")} />
-        <Stat value={String(d.turnCount)} label={t("debrief.statTurns")} />
-        <Stat value={openCount === 0 ? t("debrief.none") : String(openCount)} label={t("debrief.statMis")} />
-      </div>
+        <div className="relative flex flex-col items-center gap-6 sm:flex-row sm:items-center">
+          <ProgressRing covered={coveredCount} total={d.totalItems} />
+
+          <div className="min-w-0 flex-1 text-center sm:text-left">
+            <p className="text-sm" style={{ color: "var(--fg-muted)" }}>
+              {d.topicTitle}
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold leading-tight">
+              {t(EXIT_KEY[d.exitReason ?? ""] ?? "debrief.ended")}
+            </h1>
+
+            <div className="mt-4 flex flex-wrap justify-center gap-2 sm:justify-start">
+              <MetaChip value={String(d.turnCount)} label={t("debrief.statTurns")} />
+              <MetaChip
+                value={openCount === 0 ? t("debrief.none") : String(openCount)}
+                label={t("debrief.statMis")}
+                warn={openCount > 0}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ----- Đường học: chỉ số về HỌC mà track D bắt buộc ----- */}
       {d.curve.length > 1 && (
@@ -67,46 +91,70 @@ export default function DebriefClient({ d }: { d: DebriefData }) {
         </Section>
       )}
 
-      {/* ----- Ý đã giảng được ----- */}
+      {/* ----- Toàn bộ ý của bài: đã giảng thì rõ, chưa giảng thì mờ ----- */}
       <Section title={t("debrief.done")}>
         <ul className="space-y-2">
-          {d.done.map((i) => (
-            <li
-              key={i.id}
-              className="rounded-xl border p-3 text-sm"
-              style={{ borderColor: "var(--ok-border)", background: "var(--ok-bg)", color: "var(--ok-fg)" }}
-            >
-              <span className="mr-2 font-mono text-xs">✓</span>
-              {i.label}
-            </li>
-          ))}
-          {d.done.length === 0 && (
-            <li className="text-sm" style={{ color: "var(--fg-muted)" }}>
-              {t("debrief.doneEmpty")}
-            </li>
-          )}
-        </ul>
-      </Section>
-
-      {/* ----- Chỗ cần ôn lại ----- */}
-      {d.todo.length > 0 && (
-        <Section title={t("debrief.todo")}>
-          <ul className="space-y-2">
-            {d.todo.map((i) => (
+          {d.points.map((i) => {
+            // Ý CHƯA giảng được mà hiện thẳng ra là phát không đáp án sau khi đã
+            // giữ kín suốt phiên. Làm mờ, ai muốn xem thì tự bấm.
+            // Mã đoạn tài liệu vẫn hiện để còn biết đường ôn.
+            const shown = i.covered || revealed.has(i.id);
+            return (
               <li
                 key={i.id}
-                className="rounded-xl border p-3 text-sm"
-                style={{ borderColor: "var(--border)", background: "var(--surface)" }}
+                className="rounded-xl border p-3 text-sm transition-colors"
+                style={
+                  i.covered
+                    ? { borderColor: "var(--ok-border)", background: "var(--ok-bg)", color: "var(--ok-fg)" }
+                    : { borderColor: "var(--border)", background: "var(--surface)" }
+                }
               >
-                <div>{i.label}</div>
-                <div className="mt-1 font-mono text-xs" style={{ color: "var(--fg-muted)" }}>
-                  {t("debrief.source", { code: i.source })}
+                <div className="flex items-start gap-2">
+                  <span className="mt-0.5 font-mono text-xs" style={{ opacity: i.covered ? 1 : 0.45 }}>
+                    {i.covered ? "✓" : "○"}
+                  </span>
+
+                  {i.covered ? (
+                    <span className="flex-1">{i.label}</span>
+                  ) : (
+                    <button
+                      onClick={() => setRevealed((s) => new Set(s).add(i.id))}
+                      disabled={shown}
+                      className="flex-1 text-left"
+                      aria-label={shown ? undefined : t("debrief.reveal")}
+                    >
+                      <span
+                        className="block transition-[filter,opacity] duration-300"
+                        style={shown ? undefined : { filter: "blur(5px)", opacity: 0.75, userSelect: "none" }}
+                      >
+                        {i.label}
+                      </span>
+                    </button>
+                  )}
                 </div>
+
+                {!i.covered && (
+                  <div
+                    className="mt-1.5 flex items-center gap-2 pl-6 font-mono text-xs"
+                    style={{ color: "var(--fg-muted)" }}
+                  >
+                    <span>{t("debrief.source", { code: i.source })}</span>
+                    {!shown && (
+                      <button
+                        onClick={() => setRevealed((s) => new Set(s).add(i.id))}
+                        className="font-sans underline"
+                        style={{ color: "var(--primary)" }}
+                      >
+                        {t("debrief.reveal")}
+                      </button>
+                    )}
+                  </div>
+                )}
               </li>
-            ))}
-          </ul>
-        </Section>
-      )}
+            );
+          })}
+        </ul>
+      </Section>
 
       {/* ----- Hiểu lầm: luật D3 cấm để học viên rời đi với kiến thức sai ----- */}
       {d.misconceptions.length > 0 && (
@@ -133,16 +181,18 @@ export default function DebriefClient({ d }: { d: DebriefData }) {
       <div className="mt-10 flex flex-wrap gap-3">
         <Link
           href={`/teach/${d.topicId}`}
-          className="rounded-xl px-5 py-2.5 text-sm font-medium no-underline"
+          className="btn-press inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 text-sm font-medium no-underline"
           style={{ background: "var(--primary)", color: "var(--primary-fg)" }}
         >
+          <IconRepeat />
           {t("debrief.again")}
         </Link>
         <Link
           href="/"
-          className="rounded-xl border px-5 py-2.5 text-sm font-medium no-underline"
+          className="btn-press inline-flex items-center gap-1.5 rounded-xl border px-5 py-2.5 text-sm font-medium no-underline"
           style={{ borderColor: "var(--border-strong)", color: "var(--fg)" }}
         >
+          <IconGrid />
           {t("debrief.other")}
         </Link>
       </div>
@@ -165,16 +215,91 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
+const ico = {
+  width: 14,
+  height: 14,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  "aria-hidden": true,
+};
+
+function IconRepeat() {
   return (
-    <div
-      className="rounded-xl border p-4"
-      style={{ borderColor: "var(--border)", background: "var(--surface)" }}
-    >
-      <div className="text-2xl font-semibold">{value}</div>
-      <div className="mt-0.5 text-xs" style={{ color: "var(--fg-muted)" }}>
-        {label}
+    <svg {...ico}>
+      <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+      <path d="M21 3v5h-5" />
+      <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+      <path d="M3 21v-5h5" />
+    </svg>
+  );
+}
+
+function IconGrid() {
+  return (
+    <svg {...ico}>
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </svg>
+  );
+}
+
+/** Vòng tiến độ: bao nhiêu ý trong bài đã giảng được. */
+function ProgressRing({ covered, total }: { covered: number; total: number }) {
+  const R = 42;
+  const C = 2 * Math.PI * R;
+  const pct = total > 0 ? covered / total : 0;
+
+  return (
+    <div className="relative h-[104px] w-[104px] shrink-0">
+      <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+        <circle cx="50" cy="50" r={R} fill="none" strokeWidth="9" stroke="var(--surface-2)" />
+        <circle
+          cx="50"
+          cy="50"
+          r={R}
+          fill="none"
+          strokeWidth="9"
+          strokeLinecap="round"
+          stroke="var(--primary)"
+          strokeDasharray={C}
+          strokeDashoffset={C * (1 - pct)}
+          style={{ transition: "stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1)" }}
+        />
+      </svg>
+
+      <div className="absolute inset-0 grid place-items-center leading-none">
+        <div className="text-center">
+          <div className="text-xl font-bold tabular-nums">
+            {covered}
+            <span style={{ color: "var(--fg-muted)" }}>/{total}</span>
+          </div>
+          <div className="mt-1 text-[10px]" style={{ color: "var(--fg-muted)" }}>
+            {Math.round(pct * 100)}%
+          </div>
+        </div>
       </div>
     </div>
+  );
+}
+
+function MetaChip({ value, label, warn }: { value: string; label: string; warn?: boolean }) {
+  return (
+    <span
+      className="inline-flex items-baseline gap-1.5 rounded-full border px-3 py-1.5 text-xs"
+      style={
+        warn
+          ? { borderColor: "var(--warn-border)", background: "var(--warn-bg)", color: "var(--warn-fg)" }
+          : { borderColor: "var(--border)", background: "var(--surface-2)", color: "var(--fg-muted)" }
+      }
+    >
+      <strong className="text-sm font-bold tabular-nums">{value}</strong>
+      {label}
+    </span>
   );
 }

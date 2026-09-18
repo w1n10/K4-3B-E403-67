@@ -31,10 +31,14 @@ export default async function DebriefPage({ params }: { params: Promise<{ sessio
     exitReason: s.exit_reason,
     turnCount: s.turns.length,
     totalItems: topic.items.length,
-    done: topic.items.filter((i) => covered.has(i.id)).map((i) => ({ id: i.id, label: i.label })),
-    todo: topic.items
-      .filter((i) => !covered.has(i.id))
-      .map((i) => ({ id: i.id, label: i.label, source: i.source })),
+    // Một danh sách duy nhất, giữ đúng thứ tự trong bài: ý đã giảng hiện rõ,
+    // ý chưa giảng để mờ. Như vậy học viên thấy được toàn cảnh mình phủ tới đâu.
+    points: topic.items.map((i) => ({
+      id: i.id,
+      label: i.label,
+      source: i.source,
+      covered: covered.has(i.id),
+    })),
     // Đường học: số ý phủ được sau từng lượt — chỉ số về HỌC, không phải "AI trả lời đúng".
     curve: s.turns.map((t) => t.covered_after.length),
     misconceptions: [...seen].map(([id, label]) => ({ id, label, open: stillOpen.has(id) })),

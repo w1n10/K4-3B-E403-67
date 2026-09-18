@@ -67,6 +67,10 @@
       <stop offset="90%" stop-color="#FFC6CA" stop-opacity="0.8"/>
       <stop offset="100%" stop-color="#F9DCC0"/>
     </linearGradient>
+    <!-- Cắt mọi vệt sáng trang trí theo đúng hình thẻ bo góc -->
+    <clipPath id="cardClip">
+      <rect x="5" y="5" width="950" height="250" rx="28"/>
+    </clipPath>
   </defs>
 
   <!-- Outer Rounded Banner Card -->

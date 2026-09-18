@@ -67,6 +67,19 @@ export default function TeachClient({
     [turns, title, initialQuestion]
   );
 
+  // Ý vừa được mở khoá ở lượt này -> chạy hiệu ứng "mở kho báu" rồi tự tắt,
+  // để lần render sau không chạy lại animation.
+  const [justUnlocked, setJustUnlocked] = useState<string[]>([]);
+  const prevCovered = useRef<string[]>([]);
+  useEffect(() => {
+    const fresh = coveredIds.filter((id) => !prevCovered.current.includes(id));
+    prevCovered.current = coveredIds;
+    if (fresh.length === 0) return;
+    setJustUnlocked(fresh);
+    const timer = setTimeout(() => setJustUnlocked([]), 1000);
+    return () => clearTimeout(timer);
+  }, [coveredIds]);
+
   const endRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -153,7 +166,7 @@ export default function TeachClient({
             <button
               onClick={() => setConfirmQuit(true)}
               className={
-                "rounded-lg border px-3 py-1.5 text-xs whitespace-nowrap" +
+                "btn-press rounded-lg border px-3 py-1.5 text-xs whitespace-nowrap" +
                 (sessionId && !done ? "" : " invisible")
               }
               style={{ borderColor: "var(--border-strong)", color: "var(--fg-muted)" }}
@@ -176,7 +189,7 @@ export default function TeachClient({
                     <button
                       onClick={() => void giveUp()}
                       disabled={loading}
-                      className="rounded-lg px-3 py-1.5 text-xs font-medium disabled:opacity-40"
+                      className="btn-press rounded-lg px-3 py-1.5 text-xs font-medium disabled:opacity-40"
                       style={{ background: "var(--primary)", color: "var(--primary-fg)" }}
                     >
                       {t("teach.quitYes")}
@@ -203,8 +216,11 @@ export default function TeachClient({
           {messages.map((m, i) =>
             m.role === "student" ? (
               <div key={i} className="text-right">
+                {/* text-left ở chính bong bóng: khung ngoài dùng text-right để đẩy
+                    bong bóng sang phải, nhưng thuộc tính đó kế thừa xuống chữ bên
+                    trong làm dòng xuống hàng bị căn phải, mép trái lởm chởm. */}
                 <div
-                  className="inline-block max-w-[85%] rounded-2xl px-4 py-2 text-sm"
+                  className="inline-block max-w-[85%] rounded-2xl px-4 py-2 text-left text-sm"
                   style={{ background: "var(--primary)", color: "var(--primary-fg)" }}
                 >
                   {m.text}
@@ -248,7 +264,7 @@ export default function TeachClient({
                   ngôn ngữ bị dựng lại từ đầu nên nhảy về tiếng Việt mặc định. */}
               <Link
                 href={`/debrief/${sessionId}`}
-                className="mt-3 inline-block rounded-lg px-4 py-2 text-xs font-medium no-underline"
+                className="btn-press mt-3 inline-block rounded-lg px-4 py-2 text-xs font-medium no-underline"
                 style={{ background: "var(--primary)", color: "var(--primary-fg)" }}
               >
                 {t("teach.doneCta")}
@@ -291,10 +307,24 @@ export default function TeachClient({
           <button
             onClick={() => void send()}
             disabled={loading || done || !input.trim()}
-            className="rounded-xl px-5 text-sm font-medium disabled:opacity-40"
+            className="btn-press inline-flex items-center gap-1.5 rounded-xl px-5 text-sm font-medium disabled:opacity-40"
             style={{ background: "var(--primary)", color: "var(--primary-fg)" }}
           >
             {t("teach.send")}
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M22 2 11 13" />
+              <path d="M22 2 15 22l-4-9-9-4z" />
+            </svg>
           </button>
         </div>
 
@@ -315,19 +345,50 @@ export default function TeachClient({
         <ul className="space-y-2">
           {items.map((it, idx) => {
             const ok = covered.has(it.id);
+            const fresh = justUnlocked.includes(it.id);
             return (
               <li
                 key={it.id}
-                className="rounded-xl border p-3 text-xs transition-colors"
+                className={
+                  "point-row rounded-xl border p-3 text-xs" +
+                  (ok ? "" : " point-locked") +
+                  (fresh ? " unlocking" : "")
+                }
                 style={
                   ok
                     ? { borderColor: "var(--ok-border)", background: "var(--ok-bg)", color: "var(--ok-fg)" }
-                    : { borderColor: "var(--border)", background: "var(--surface)", color: "var(--fg-muted)" }
+                    : { borderColor: "var(--border-strong)", background: "var(--surface)", color: "var(--fg-muted)" }
                 }
               >
-                <span className="mr-1 font-mono">{ok ? "✓" : "○"}</span>
-                {/* Chưa đạt thì KHÔNG hiện label — hiện ra là lộ đáp án */}
-                {ok ? it.label : t("teach.hiddenItem", { n: idx + 1 })}
+                {/* Tia sáng bắn ra đúng lúc ý vừa mở khoá */}
+                {fresh && (
+                  <span
+                    className="unlock-spark pointer-events-none absolute -right-1 -top-2 text-base"
+                    style={{ color: "var(--primary)" }}
+                    aria-hidden
+                  >
+                    ✦
+                  </span>
+                )}
+
+                <div className="relative flex items-start gap-2">
+                  <span
+                    className="point-badge"
+                    style={
+                      ok
+                        ? { background: "var(--primary)", color: "var(--primary-fg)" }
+                        : { background: "var(--surface-2)", color: "var(--fg-muted)" }
+                    }
+                    aria-hidden
+                  >
+                    {ok ? "✓" : idx + 1}
+                  </span>
+
+                  {/* Chưa đạt thì KHÔNG hiện label — hiện ra là lộ đáp án */}
+                  <span className={"flex-1 leading-snug" + (fresh ? " unlock-text" : "")}>
+                    {ok ? it.label : t("teach.hiddenItem", { n: idx + 1 })}
+                  </span>
+                </div>
               </li>
             );
           })}
