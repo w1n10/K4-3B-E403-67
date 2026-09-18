@@ -16,6 +16,7 @@ import {
   END_AT,
   getReviewHint,
   getWrapUp,
+  isNoProgress,
   HINT_AT,
   lastProbedTarget,
   noProgressStreak,
@@ -132,10 +133,12 @@ export async function POST(req: NextRequest) {
   // ---- STAGE 0: chặn trước, 0 token ----
   const guard = runGuard(text, topic, st.history, style);
   if (guard.blocked) {
-    // Bỏ cuộc tính là "không tiến bộ"; verdict khác (dán nguyên văn, hỏi ngược) trung tính.
-    const streak = guard.verdict === "low_effort" ? priorStreak + 1 : priorStreak;
+    // Lượt không có nội dung để chấm ("không biết", "ok", "ko") tính là không tiến bộ;
+    // verdict khác (dán nguyên văn, hỏi ngược) trung tính vì học viên vẫn đang tương tác.
+    const noProgress = isNoProgress(guard.verdict);
+    const streak = noProgress ? priorStreak + 1 : priorStreak;
 
-    if (guard.verdict === "low_effort" && streak >= END_AT) {
+    if (noProgress && streak >= END_AT) {
       // Đã nhắc xem slide mà vẫn bỏ cuộc tiếp -> dừng phiên, cho xem tổng kết.
       const targetItem = pickReviewTarget(topic, st.coveredIds, prevProbTarget);
       const reply = getWrapUp(style);
@@ -150,7 +153,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (guard.verdict === "low_effort" && streak === HINT_AT) {
+    if (noProgress && streak === HINT_AT) {
       // Lần thứ 3 bỏ cuộc -> mời mở đúng slide rồi quay lại, chưa dừng phiên.
       const targetItem = pickReviewTarget(topic, st.coveredIds, prevProbTarget);
       const reply = getReviewHint(topic, targetItem, style);

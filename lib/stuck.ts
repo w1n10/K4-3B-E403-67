@@ -6,10 +6,24 @@
 //   - lượt được chấm nhưng không nói được Ý mà câu hỏi lượt trước nhắm vào.
 // Lượt bị chặn vì lý do khác (dán nguyên văn, hỏi ngược) là trung tính.
 
-import type { ChecklistItem, PersonaStyleId, Topic, TurnRecord } from "./types";
+import type { ChecklistItem, PersonaStyleId, Stage0Verdict, Topic, TurnRecord } from "./types";
 
 export const HINT_AT = 3; // không tiến bộ liên tiếp lần 3 -> nhắc xem slide
 export const END_AT = 5; // nhắc rồi vẫn không tiến bộ thêm 2 lần -> dừng phiên
+
+/**
+ * Verdict Stage 0 tính là "không tiến bộ": lượt đó KHÔNG có nội dung nào để chấm.
+ *   - low_effort   : "không biết", "chịu", câu quá ngắn
+ *   - short_affirm : "ok", "đúng rồi" — gật đầu nhưng chưa giải thích gì
+ *   - short_negate : "ko", "không"    — phủ nhận nhưng chưa giải thích gì
+ *
+ * verbatim_copy và asked_ai là TRUNG TÍNH: học viên vẫn đang tương tác, chỉ sai cách.
+ */
+const NO_PROGRESS: readonly Stage0Verdict[] = ["low_effort", "short_affirm", "short_negate"];
+
+export function isNoProgress(verdict: Stage0Verdict | null | undefined): boolean {
+  return !!verdict && NO_PROGRESS.includes(verdict);
+}
 
 /** Số lượt "không tiến bộ" liên tiếp ở cuối phiên. */
 export function noProgressStreak(turns: TurnRecord[]): number {
@@ -17,7 +31,7 @@ export function noProgressStreak(turns: TurnRecord[]): number {
   let openTarget: string | undefined;
 
   for (const t of turns) {
-    if (t.stage0_verdict === "low_effort") {
+    if (isNoProgress(t.stage0_verdict)) {
       streak += 1;
       continue; // không có lượt chấm mới nên openTarget giữ nguyên
     }

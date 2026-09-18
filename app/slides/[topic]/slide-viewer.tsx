@@ -38,9 +38,10 @@ export default function SlideViewer({
         {/* Về lại phiên dạy — phiên vẫn còn nguyên vì slide mở ở tab riêng. */}
         <Link
           href={`/teach/${topicId}`}
-          className="shrink-0 rounded-lg border px-3 py-1.5 text-xs no-underline"
+          className="btn-press inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs no-underline"
           style={{ borderColor: "var(--border-strong)", color: "var(--fg-muted)" }}
         >
+          <IconChevron dir="left" />
           {t("slides.back")}
         </Link>
       </header>
@@ -58,9 +59,10 @@ export default function SlideViewer({
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={!hasPages || page <= 1}
-              className="rounded-lg border px-3 py-1.5 text-xs disabled:opacity-40"
+              className="btn-press inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs disabled:opacity-40"
               style={{ borderColor: "var(--border-strong)", color: "var(--fg)" }}
             >
+              <IconChevron dir="left" />
               {t("slides.prev")}
             </button>
 
@@ -71,27 +73,21 @@ export default function SlideViewer({
             <button
               onClick={() => setPage((p) => Math.min(pages, p + 1))}
               disabled={!hasPages || page >= pages}
-              className="rounded-lg border px-3 py-1.5 text-xs disabled:opacity-40"
+              className="btn-press inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs disabled:opacity-40"
               style={{ borderColor: "var(--border-strong)", color: "var(--fg)" }}
             >
               {t("slides.next")}
+              <IconChevron dir="right" />
             </button>
-
-            <a
-              href={`${pdfUrl}#page=${page}`}
-              target="_blank"
-              rel="noreferrer"
-              className="ml-auto rounded-lg px-3 py-1.5 text-xs font-medium no-underline"
-              style={{ background: "var(--primary)", color: "var(--primary-fg)" }}
-            >
-              {t("slides.openNew")}
-            </a>
           </div>
 
-          {/* key={page}: đổi trang phải nhúng lại PDF, vì hash #page không tự nhảy. */}
+          {/* key={page}: đổi trang phải nhúng lại PDF, vì hash #page không tự nhảy.
+              toolbar=0: ẩn thanh công cụ PDF của trình duyệt, trong đó có nút Tải và In.
+              Đây là tham số cho trình xem PDF, KHÔNG phải cơ chế bảo vệ —
+              ai gõ thẳng /api/slides/<file> vẫn tải được. Xem ghi chú ở route. */}
           <iframe
             key={page}
-            src={`${pdfUrl}#page=${page}&view=FitH`}
+            src={`${pdfUrl}#page=${page}&view=FitH&toolbar=0&navpanes=0&statusbar=0`}
             title={title}
             className="h-[70vh] w-full rounded-xl border md:h-[calc(100vh-13rem)]"
             style={{ borderColor: "var(--border)", background: "var(--surface)" }}
@@ -99,5 +95,23 @@ export default function SlideViewer({
         </>
       )}
     </main>
+  );
+}
+
+function IconChevron({ dir }: { dir: "left" | "right" }) {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d={dir === "left" ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6"} />
+    </svg>
   );
 }

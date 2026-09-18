@@ -4,7 +4,6 @@
 // Đây là chỗ DUY NHẤT được hiện coverage — trong lúc học thì không, vì luật an toàn D3
 // cấm tạo cảm giác bị chấm điểm ngầm. Ở đây phiên đã xong nên hiện là đúng lúc.
 
-import { useState } from "react";
 import Link from "next/link";
 import { useT, type Key } from "@/lib/i18n";
 
@@ -30,8 +29,6 @@ const EXIT_KEY: Record<string, Key> = {
 
 export default function DebriefClient({ d }: { d: DebriefData }) {
   const { t } = useT();
-  // Ý chưa giảng được mặc định để mờ; học viên tự bấm mới hiện.
-  const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const openCount = d.misconceptions.filter((m) => m.open).length;
 
   const coveredCount = d.points.filter((p) => p.covered).length;
@@ -62,11 +59,9 @@ export default function DebriefClient({ d }: { d: DebriefData }) {
 
             <div className="mt-4 flex flex-wrap justify-center gap-2 sm:justify-start">
               <MetaChip value={String(d.turnCount)} label={t("debrief.statTurns")} />
-              <MetaChip
-                value={openCount === 0 ? t("debrief.none") : String(openCount)}
-                label={t("debrief.statMis")}
-                warn={openCount > 0}
-              />
+              {/* Luôn hiện số, kể cả 0 — để hai chip cùng dạng "con số + nhãn",
+                  đọc lướt không phải chuyển kiểu. */}
+              <MetaChip value={String(openCount)} label={t("debrief.statMis")} warn={openCount > 0} />
             </div>
           </div>
         </div>
@@ -98,14 +93,13 @@ export default function DebriefClient({ d }: { d: DebriefData }) {
       <Section title={t("debrief.done")}>
         <ul className="space-y-2">
           {d.points.map((i) => {
-            // Ý CHƯA giảng được mà hiện thẳng ra là phát không đáp án sau khi đã
-            // giữ kín suốt phiên. Làm mờ, ai muốn xem thì tự bấm.
-            // Mã đoạn tài liệu vẫn hiện để còn biết đường ôn.
-            //
-            // label === null: phiên kẹt, server không gửi nội dung xuống -> không có
-            // gì để mờ hay để bấm hiện, chỉ đánh dấu là chưa đạt.
+            // Ba trạng thái:
+            //   covered           -> hiện rõ, đây là lời chính học viên nói ra
+            //   chưa giảng được   -> mờ vĩnh viễn, KHÔNG có nút hiện; chỉ để lại mã
+            //                        đoạn tài liệu để học viên tự quay lại đọc
+            //   label === null    -> phiên kẹt, server không gửi nội dung xuống,
+            //                        chỉ còn vạch đánh dấu là "còn một Ý ở đây"
             const locked = i.label === null;
-            const shown = i.covered || revealed.has(i.id);
             return (
               <li
                 key={i.id}
@@ -133,37 +127,25 @@ export default function DebriefClient({ d }: { d: DebriefData }) {
                       ▪▪▪▪▪▪▪▪▪▪▪▪▪▪
                     </span>
                   ) : (
-                    <button
-                      onClick={() => setRevealed((s) => new Set(s).add(i.id))}
-                      disabled={shown}
-                      className="flex-1 text-left"
-                      aria-label={shown ? undefined : t("debrief.reveal")}
+                    // Ý chưa giảng được: để mờ VĨNH VIỄN, không có cách nào hiện ra.
+                    // Học viên phải quay lại tài liệu theo mã đoạn bên dưới, chứ
+                    // không được phát không đáp án ở màn tổng kết.
+                    <span
+                      className="flex-1 select-none"
+                      style={{ filter: "blur(5px)", opacity: 0.7 }}
+                      aria-hidden
                     >
-                      <span
-                        className="block transition-[filter,opacity] duration-300"
-                        style={shown ? undefined : { filter: "blur(5px)", opacity: 0.75, userSelect: "none" }}
-                      >
-                        {i.label}
-                      </span>
-                    </button>
+                      {i.label}
+                    </span>
                   )}
                 </div>
 
                 {!i.covered && !locked && (
                   <div
-                    className="mt-1.5 flex items-center gap-2 pl-6 font-mono text-xs"
+                    className="mt-1.5 pl-6 font-mono text-xs"
                     style={{ color: "var(--fg-muted)" }}
                   >
-                    <span>{t("debrief.source", { code: i.source })}</span>
-                    {!shown && (
-                      <button
-                        onClick={() => setRevealed((s) => new Set(s).add(i.id))}
-                        className="font-sans underline"
-                        style={{ color: "var(--primary)" }}
-                      >
-                        {t("debrief.reveal")}
-                      </button>
-                    )}
+                    {t("debrief.source", { code: i.source })}
                   </div>
                 )}
               </li>
