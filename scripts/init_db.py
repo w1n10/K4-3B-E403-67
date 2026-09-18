@@ -84,7 +84,7 @@ def create_schema(cursor):
     );
     """)
 
-    # 3. BẢNG RUNTIME D3: TOPICS & CHECKLIST & MISCONCEPTIONS (Theo architecture.md §3)
+    # 3. BẢNG RUNTIME D3: TOPICS & CHECKLIST & MISCONCEPTIONS (Theo docs/architecture.md §3)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS topics (
         topic_id TEXT PRIMARY KEY,
@@ -117,7 +117,7 @@ def create_schema(cursor):
     );
     """)
 
-    # 4. BẢNG RUNTIME D3: SESSIONS & TURNS (Theo architecture.md §6)
+    # 4. BẢNG RUNTIME D3: SESSIONS & TURNS (Theo docs/architecture.md §6)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS sessions (
         id TEXT PRIMARY KEY,
@@ -346,7 +346,7 @@ def build_hotspots_summary(conn):
     print(f"[✓] Đã tạo {hs_count} hotspots (theo Slide và Module/Part có >= 5 câu hỏi).")
 
 def seed_sample_topic(conn):
-    """Seed mẫu topic theo đúng architecture.md để ứng dụng Next.js có thể chạy thử ngay"""
+    """Seed mẫu topic theo đúng docs/architecture.md để ứng dụng Next.js có thể chạy thử ngay"""
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM topics;")
     if cursor.fetchone()[0] == 0:
@@ -373,7 +373,7 @@ def seed_sample_topic(conn):
         """, misconceptions)
         
         conn.commit()
-        print("[✓] Đã seed sẵn chủ đề mẫu 'llm-hallucination' (theo architecture.md §3).")
+        print("[✓] Đã seed sẵn chủ đề mẫu 'llm-hallucination' (theo docs/architecture.md §3).")
 
 def main():
     csv_file = get_csv_path()

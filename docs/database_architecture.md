@@ -21,7 +21,7 @@ Theo quy định bắt buộc của Hackathon và `README.md` (§"Bảo mật d�
   ```
 - **Tính di động (Portability) giữa các máy:**
   - Không truyền file database qua Git.
-  - Thay vào đó, commit script tái lập [scripts/init_db.py](file:///e:/AI%20In%20Action/Hackathon/K4-3B-E403-67/scripts/init_db.py). Bất kỳ thành viên nào chỉ cần kéo code về, đặt data vào thư mục `data/` và chạy `python scripts/init_db.py` là có ngay database hoàn chỉnh trong ~1 giây.
+  - Thay vào đó, commit script tái lập [scripts/init_db.py](../scripts/init_db.py). Bất kỳ thành viên nào chỉ cần kéo code về, đặt data vào thư mục `data/` và chạy `python scripts/init_db.py` là có ngay database hoàn chỉnh trong ~1 giây.
 
 ---
 
@@ -53,8 +53,8 @@ Database được tổ chức thành 2 phân vùng phục vụ 2 mục đích ri
    - `selected_snippet`: Đoạn bôi đen từ regex `(đoạn được chọn: "...")`.
    - `cited_slides`: Mảng JSON các trang slide do tutor trích dẫn `[trang \d+]`.
 2. **`lecture_hotspots` (489 dòng):** Bảng tổng hợp các cụm kiến thức có từ 5 câu hỏi trở lên theo từng Slide hoặc Module.
-3. **`topics`, `checklist_items`, `misconceptions`:** Schema chuẩn cho các chủ đề học theo [architecture.md §3](file:///e:/AI%20In%20Action/Hackathon/K4-3B-E403-67/architecture.md#L66-L87).
-4. **`sessions`, `turns`:** Schema ghi log phiên học thử nghiệm (mã ẩn danh `U01..U05`) theo [architecture.md §6](file:///e:/AI%20In%20Action/Hackathon/K4-3B-E403-67/architecture.md#L190-L214).
+3. **`topics`, `checklist_items`, `misconceptions`:** Schema chuẩn cho các chủ đề học theo [architecture.md §3](architecture.md#3-hợp-đồng-dữ-liệu).
+4. **`sessions`, `turns`:** Schema ghi log phiên học thử nghiệm (mã ẩn danh `U01..U05`) theo [architecture.md §6](architecture.md#6-lưu-phiên-học).
 
 ---
 
