@@ -25,20 +25,34 @@ export default async function DebriefPage({ params }: { params: Promise<{ sessio
     })
   );
 
+  const uncovered = topic.items.filter((i) => !covered.has(i.id));
+
+  // Phiên dừng vì kẹt (đã nhắc xem slide): KHÔNG gửi label của Ý còn thiếu xuống client,
+  // kể cả trong payload RSC — ẩn ở UI thôi là vẫn đọc được qua DevTools.
+  const hiddenTodo = s.exit_reason === "stuck" && uncovered.length > 0;
+
   const data: DebriefData = {
     topicId: s.topic_id,
     topicTitle: topic.title,
     exitReason: s.exit_reason,
     turnCount: s.turns.length,
     totalItems: topic.items.length,
+    hiddenTodo,
     // Một danh sách duy nhất, giữ đúng thứ tự trong bài: ý đã giảng hiện rõ,
     // ý chưa giảng để mờ. Như vậy học viên thấy được toàn cảnh mình phủ tới đâu.
-    points: topic.items.map((i) => ({
-      id: i.id,
-      label: i.label,
-      source: i.source,
-      covered: covered.has(i.id),
-    })),
+    //
+    // Phiên kẹt (hiddenTodo): label của Ý chưa đạt KHÔNG được gửi xuống client.
+    // Làm mờ ở UI thôi là chưa đủ — chuỗi đó vẫn nằm trong payload RSC, mở
+    // DevTools là đọc được.
+    points: topic.items.map((i) => {
+      const isCovered = covered.has(i.id);
+      return {
+        id: i.id,
+        label: isCovered || !hiddenTodo ? i.label : null,
+        source: i.source,
+        covered: isCovered,
+      };
+    }),
     // Đường học: số ý phủ được sau từng lượt — chỉ số về HỌC, không phải "AI trả lời đúng".
     curve: s.turns.map((t) => t.covered_after.length),
     misconceptions: [...seen].map(([id, label]) => ({ id, label, open: stillOpen.has(id) })),

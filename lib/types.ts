@@ -6,6 +6,8 @@ export type ChecklistItem = {
   label: string;         // một Ý, không phải câu chữ trong tài liệu
   source: string;        // mã đoạn transcript, vd T06-136
   keywords?: string[];
+  slide_page?: number;   // trang trong bộ slide của buổi — để chỉ chỗ xem lại khi học viên kẹt
+  slide_title?: string;  // tiêu đề slide, chỉ đúng chỗ kể cả khi bộ slide đánh số khác
 };
 
 export type Misconception = {
@@ -19,6 +21,8 @@ export type Topic = {
   topic_id: string;
   title: string;
   source_lecture: string;
+  slide_file?: string;   // tên file trong data/vlearn-pack/slides, vd d1-slide-hackathon.pdf
+  slide_pages?: number;  // tổng số trang của bộ slide
   starter_questions?: string[];
   items: ChecklistItem[];
   misconceptions: Misconception[];
@@ -72,7 +76,7 @@ export type Stage2Input = {
 
 // ---------- LƯU PHIÊN ----------
 
-export type ExitReason = "completed" | "gave_up" | "turn_cap";
+export type ExitReason = "completed" | "gave_up" | "turn_cap" | "stuck";
 
 export type TurnRecord = {
   turn_index: number;

@@ -134,14 +134,18 @@ Output: 1–2 câu, giọng học trò tò mò, kết thúc bằng một câu h�
 
 1. Client `POST /api/checkpoint { sessionId, text }`
 2. **Stage 0** chạy luật → nếu trúng: trả template reply, ghi log, return luôn (tiết kiệm 1 AI call)
+   - "Không biết", "chịu", để trống… (`low_effort`) tính là một lượt **không tiến bộ** cho luật kẹt ở bước 6
 3. **Stage 1** → JSON evaluation
 4. **Orchestrator** gộp `covered` vào state phiên
 5. Xét điều kiện thoát:
    - `coverage ≥ 5/7` **và** không còn misconception mở → sang Debrief (`exit_reason: completed`)
    - chạm trần **8 lượt** → Debrief (`exit_reason: turn_cap`)
-6. **Stage 2** → câu hỏi ngược
-7. Ghi bản ghi `turns` vào Supabase
-8. Trả `{ reply, coveredIds }` về client
+6. **Luật kẹt** (`lib/stuck.ts`), đếm chuỗi lượt *không tiến bộ* liên tiếp (sai câu hỏi vừa rồi, hoặc bỏ cuộc):
+   - lần thứ **3** → không gọi Stage 2, trả câu nhắc xem lại bài giảng kèm đúng slide của Ý đang kẹt; client hiện nút mở `/slides/<topic>?page=N` ở tab riêng
+   - nhắc rồi vẫn không tiến bộ thêm **2 lần** (tổng 5) → sang Debrief (`exit_reason: stuck`); màn tổng kết **không gửi danh sách Ý còn thiếu xuống client** để không lộ đáp án
+7. **Stage 2** → câu hỏi ngược
+8. Ghi bản ghi `turns` vào Supabase
+9. Trả `{ reply, coveredIds }` về client
 
 **Không trả `coverage` về client trong lúc đang học.** Luật an toàn D3: không tạo cảm giác bị chấm điểm ngầm. Điểm và coverage chỉ hiện ở màn Debrief.
 
@@ -205,7 +209,7 @@ create table sessions (
   started_at timestamptz default now(),
   ended_at timestamptz,
   final_coverage real,
-  exit_reason text                  -- completed | gave_up | turn_cap
+  exit_reason text                  -- completed | gave_up | turn_cap | stuck
 );
 
 create table turns (

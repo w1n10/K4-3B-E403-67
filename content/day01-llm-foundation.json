@@ -2,6 +2,8 @@
   "topic_id": "day01-llm-foundation",
   "title": "Day 1 — AI & LLM Foundation: cách LLM hoạt động",
   "source_lecture": "transcript-04",
+  "slide_file": "d1-slide-hackathon.pdf",
+  "slide_pages": 29,
   "starter_questions": [
     "Chào bạn! Mình nghe bảo LLM thực chất chỉ là cỗ máy dự đoán token tiếp theo dựa trên xác suất, chứ không hề có tư duy hay tra cứu sự thật. Vậy tại sao câu từ nó sinh ra lại mạch lạc và thuyết phục như người thật viết thế hả bạn?",
     "Chào bạn! Mình cứ nghĩ context window của mô hình càng to thì càng xịn, cứ nhét hết toàn bộ sách vở tài liệu vào là xong. Nhưng tài liệu lại nói nhét nhiều quá sẽ bị context rot và phản tác dụng. Chỗ này là sao hả bạn?",
@@ -13,6 +15,8 @@
       "id": "K1",
       "label": "AI bao trùm machine learning, machine learning bao trùm deep learning, trong cùng là generative AI — các tầng là tập con lồng nhau và công nghệ đi từ ngoài vào trong",
       "source": "T04-015",
+      "slide_page": 3,
+      "slide_title": "AI, ML, Deep Learning, GenAI, LLM — nằm ở đâu trong cùng một hệ?",
       "keywords": [
         "AI",
         "machine learning",
@@ -24,6 +28,8 @@
       "id": "K2",
       "label": "LLM chỉ dự đoán token tiếp theo theo xác suất rồi nối vào chuỗi và lặp lại — nó không tra cứu sự thật, nên sinh ra câu nghe hợp lý nhưng vẫn sai (hallucination)",
       "source": "T04-048",
+      "slide_page": 12,
+      "slide_title": "Sinh văn bản = đoán → nối vào câu → đoán tiếp",
       "keywords": [
         "next token",
         "xác suất",
@@ -35,6 +41,8 @@
       "id": "K3",
       "label": "Token là đơn vị cơ bản của máy, không phải ký tự hay từ; cùng một nội dung tiếng Việt tốn nhiều token hơn tiếng Anh nên dùng API đắt hơn",
       "source": "T04-049",
+      "slide_page": 13,
+      "slide_title": "Token: model không đọc từ, model đọc mảnh chữ",
       "keywords": [
         "token",
         "tiếng Việt",
@@ -45,6 +53,8 @@
       "id": "K4",
       "label": "Context window là giới hạn lượng token mô hình xử lý một lúc; nhét quá nhiều ngữ cảnh còn làm model kém đi và quên phần đầu (context rot), nên không phải cứ lớn là tốt",
       "source": "T04-052",
+      "slide_page": 14,
+      "slide_title": "Context: bàn làm việc có hạn của model",
       "keywords": [
         "context window",
         "context rot",
@@ -55,6 +65,8 @@
       "id": "K5",
       "label": "Cơ chế attention cho mô hình nhìn cả câu và tự tính mức liên quan giữa các từ, thay vì đọc tuần tự từng chữ như RNN nên không bị quên đầu câu",
       "source": "T04-040",
+      "slide_page": 15,
+      "slide_title": "Attention: mỗi từ nhìn sang những từ quan trọng khác",
       "keywords": [
         "attention",
         "transformer",
@@ -65,6 +77,8 @@
       "id": "K6",
       "label": "Temperature quyết định độ ngẫu nhiên khi chọn token (bằng 0 thì luôn lấy xác suất cao nhất), còn top-k/top-p chỉ khoanh vùng số token được phép chọn — hai thứ khác nhau",
       "source": "T04-072",
+      "slide_page": 29,
+      "slide_title": "Hai núm vặn chọn từ: temperature & top_p",
       "keywords": [
         "temperature",
         "top-k",
@@ -76,6 +90,8 @@
       "id": "K7",
       "label": "Mô hình vẫn luôn cần con người tham gia đánh giá và gán nhãn dữ liệu (RLHF) để tốt lên, không tự thông minh lên một mình",
       "source": "T04-060",
+      "slide_page": 19,
+      "slide_title": "RLHF: ba bước uốn cỗ máy đoán token thành trợ lý biết nghe lời",
       "keywords": [
         "RLHF",
         "gán nhãn",

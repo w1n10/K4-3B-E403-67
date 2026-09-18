@@ -14,7 +14,9 @@ export type DebriefData = {
   exitReason: string | null;
   turnCount: number;
   totalItems: number;
-  points: { id: string; label: string; source: string; covered: boolean }[];
+  hiddenTodo: boolean;
+  /** label = null nghĩa là server cố tình KHÔNG gửi nội dung Ý đó xuống (phiên kẹt). */
+  points: { id: string; label: string | null; source: string; covered: boolean }[];
   curve: number[];
   misconceptions: { id: string; label: string; open: boolean }[];
 };
@@ -23,6 +25,7 @@ const EXIT_KEY: Record<string, Key> = {
   completed: "debrief.completed",
   turn_cap: "debrief.turn_cap",
   gave_up: "debrief.gave_up",
+  stuck: "debrief.stuck",
 };
 
 export default function DebriefClient({ d }: { d: DebriefData }) {
@@ -98,6 +101,10 @@ export default function DebriefClient({ d }: { d: DebriefData }) {
             // Ý CHƯA giảng được mà hiện thẳng ra là phát không đáp án sau khi đã
             // giữ kín suốt phiên. Làm mờ, ai muốn xem thì tự bấm.
             // Mã đoạn tài liệu vẫn hiện để còn biết đường ôn.
+            //
+            // label === null: phiên kẹt, server không gửi nội dung xuống -> không có
+            // gì để mờ hay để bấm hiện, chỉ đánh dấu là chưa đạt.
+            const locked = i.label === null;
             const shown = i.covered || revealed.has(i.id);
             return (
               <li
@@ -116,6 +123,15 @@ export default function DebriefClient({ d }: { d: DebriefData }) {
 
                   {i.covered ? (
                     <span className="flex-1">{i.label}</span>
+                  ) : locked ? (
+                    // Không có nội dung để hiện — chỉ vạch mờ cho biết còn một Ý ở đây
+                    <span
+                      className="flex-1 select-none"
+                      style={{ color: "var(--fg-muted)", opacity: 0.55 }}
+                      aria-label={t("debrief.todoHidden")}
+                    >
+                      ▪▪▪▪▪▪▪▪▪▪▪▪▪▪
+                    </span>
                   ) : (
                     <button
                       onClick={() => setRevealed((s) => new Set(s).add(i.id))}
@@ -133,7 +149,7 @@ export default function DebriefClient({ d }: { d: DebriefData }) {
                   )}
                 </div>
 
-                {!i.covered && (
+                {!i.covered && !locked && (
                   <div
                     className="mt-1.5 flex items-center gap-2 pl-6 font-mono text-xs"
                     style={{ color: "var(--fg-muted)" }}
@@ -154,6 +170,27 @@ export default function DebriefClient({ d }: { d: DebriefData }) {
             );
           })}
         </ul>
+
+        {/* Phiên kết thúc vì kẹt: không liệt kê Ý còn thiếu, chỉ mời mở lại slide. */}
+        {d.hiddenTodo && (
+          <div
+            className="mt-4 rounded-xl border p-4"
+            style={{ borderColor: "var(--warn-border)", background: "var(--warn-bg)" }}
+          >
+            <p className="text-sm leading-relaxed" style={{ color: "var(--warn-fg)" }}>
+              {t("debrief.todoHidden")}
+            </p>
+            <Link
+              href={`/slides/${d.topicId}`}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-press mt-3 inline-block rounded-lg px-4 py-2 text-xs font-medium no-underline"
+              style={{ background: "var(--primary)", color: "var(--primary-fg)" }}
+            >
+              {t("debrief.openSlides")}
+            </Link>
+          </div>
+        )}
       </Section>
 
       {/* ----- Hiểu lầm: luật D3 cấm để học viên rời đi với kiến thức sai ----- */}

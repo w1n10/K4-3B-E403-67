@@ -76,7 +76,7 @@ Học viên gõ lời giải thích
 
 Nội dung bài đọc từ `content/*.json` (không cần DB). Chỉ **phiên học** mới vào Postgres: `sessions` (1 dòng / phiên) và `turns` (1 dòng / lượt). Cột khớp với `lib/types.ts`.
 
-`exit_reason` nhận một trong: `completed` · `gave_up` · `turn_cap`.
+`exit_reason` nhận một trong: `completed` · `gave_up` · `turn_cap` · `stuck`.
 
 ### Biến môi trường (để trong `.env.local`, không commit)
 
