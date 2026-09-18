@@ -11,7 +11,42 @@ import { useTheme } from "@/lib/theme";
 import type { PersonaStyleId } from "@/lib/types";
 
 type Item = { id: string; label: string };
-type Msg = { role: "student" | "agent"; text: string };
+/** unlocked = số ý câu này giảng trúng. Lưu theo tin nhắn nên cuộn lên vẫn thấy. */
+type Msg = { role: "student" | "agent"; text: string; unlocked?: number };
+
+/** Sticker cảm xúc gắn ở góc avatar, khớp tính cách từng persona. */
+const MOOD: Record<PersonaStyleId, string> = {
+  ban_minh: "🙂",
+  convo_toi: "😎",
+  senpai_em: "🥺",
+  thay_em: "🙇",
+};
+
+/** Sticker đổi theo kết cục phiên — bot phản ứng đúng với chuyện vừa xảy ra. */
+const MOOD_EXIT: Record<string, string> = {
+  completed: "🥳",
+  turn_cap: "😮‍💨",
+  stuck: "🥲",
+  gave_up: "🫂",
+};
+
+/** Sticker ăn mừng khi học viên vừa giảng trúng ý mới. */
+const CHEERS = ["🎉", "✨", "🤩", "👏"];
+const SPARKS = ["⭐", "💫", "✨"];
+
+/** Câu bot reo lên khi vừa hiểu thêm được ý — lời agent nên luôn tiếng Việt. */
+function cheerLine(style: PersonaStyleId, n: number): string {
+  switch (style) {
+    case "convo_toi":
+      return `Ồ, tôi hiểu thêm ${n} ý rồi nè!`;
+    case "senpai_em":
+      return `A, em hiểu thêm ${n} ý rồi ạ!`;
+    case "thay_em":
+      return `Dạ, em hiểu thêm ${n} ý rồi ạ!`;
+    default:
+      return `À, mình hiểu thêm ${n} ý rồi!`;
+  }
+}
 
 export default function TeachClient({
   topicId,
@@ -49,6 +84,7 @@ export default function TeachClient({
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [exitReason, setExitReason] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Khi agent nhắc xem slide: { page, title } để hiện nút mở trang slide đúng trang.
   const [slideHint, setSlideHint] = useState<{ page: number; title?: string } | null>(null);
@@ -117,7 +153,25 @@ export default function TeachClient({
       if (!res.ok) throw new Error(data.error ?? `Lỗi ${res.status}`);
 
       setSessionId(data.sessionId);
-      setCoveredIds(data.coveredIds ?? []);
+
+      // Số ý mới mở được ở lượt này -> gắn vào chính câu học viên vừa gửi,
+      // để cuộn lên vẫn biết câu nào là câu giảng trúng.
+      const nextCovered: string[] = data.coveredIds ?? [];
+      const gained = nextCovered.filter((id: string) => !coveredIds.includes(id)).length;
+      if (gained > 0) {
+        setTurns((m) => {
+          const copy = [...m];
+          for (let k = copy.length - 1; k >= 0; k--) {
+            if (copy[k].role === "student") {
+              copy[k] = { ...copy[k], unlocked: gained };
+              break;
+            }
+          }
+          return copy;
+        });
+      }
+      setCoveredIds(nextCovered);
+      if (data.exitReason) setExitReason(data.exitReason);
       setSlideHint(data.slide ?? null);
       if (data.reply) setTurns((m) => [...m, { role: "agent", text: data.reply }]);
       if (data.done) setDone(true);
@@ -159,6 +213,7 @@ export default function TeachClient({
       });
       if (!res.ok) throw new Error((await res.json()).error ?? `Lỗi ${res.status}`);
       setDone(true);
+      setExitReason("gave_up");
       setConfirmQuit(false); // đóng popover, không để bấm thêm lần nữa
     } catch (e) {
       setError((e as Error).message);
@@ -240,25 +295,87 @@ export default function TeachClient({
         >
           {messages.map((m, i) =>
             m.role === "student" ? (
-              <div key={i} className="text-right">
-                {/* text-left ở chính bong bóng: khung ngoài dùng text-right để đẩy
-                    bong bóng sang phải, nhưng thuộc tính đó kế thừa xuống chữ bên
-                    trong làm dòng xuống hàng bị căn phải, mép trái lởm chởm. */}
-                <div
-                  className="inline-block max-w-[85%] rounded-2xl px-4 py-2 text-left text-sm"
-                  style={{ background: "var(--primary)", color: "var(--primary-fg)" }}
-                >
-                  {m.text}
+              <div key={i}>
+                <div className="text-right">
+                  {/* text-left ở chính bong bóng: khung ngoài dùng text-right để đẩy
+                      bong bóng sang phải, nhưng thuộc tính đó kế thừa xuống chữ bên
+                      trong làm dòng xuống hàng bị căn phải, mép trái lởm chởm. */}
+                  <div
+                    className="inline-block max-w-[85%] rounded-2xl px-4 py-2 text-left text-sm"
+                    style={{ background: "var(--primary)", color: "var(--primary-fg)" }}
+                  >
+                    {m.text}
+                  </div>
                 </div>
+
+                {/* Bot reo lên ngay dưới câu giảng trúng. Là một lượt nói thật của bot
+                    nên để nguyên dạng avatar + bong bóng, chỉ đổi màu sang tông "đạt".
+                    Ở LẠI VĨNH VIỄN — cuộn lên vẫn biết câu nào trúng. */}
+                {m.unlocked && (
+                  <div className="mt-2 flex items-start gap-2">
+                    <span className="relative mt-0.5 shrink-0">
+                      <img src={avatar} alt="" width={30} height={30} className="rounded-full" />
+                      <span className="mood-badge" aria-hidden>
+                        {CHEERS[m.unlocked % CHEERS.length]}
+                      </span>
+                    </span>
+
+                    <span
+                      className="cheer max-w-[85%] rounded-2xl px-4 py-2 text-sm"
+                      style={{ background: "var(--ok-bg)", color: "var(--ok-fg)" }}
+                    >
+                      {/* Hạt chỉ bắn ở lượt vừa đạt; các lượt cũ giữ bong bóng tĩnh. */}
+                      {i === messages.length - 1 &&
+                        justUnlocked.length > 0 &&
+                        SPARKS.map((sp, k) => (
+                          <span
+                            key={k}
+                            className="cheer-particle"
+                            style={
+                              {
+                                "--dx": `${[-16, 16, -2][k]}px`,
+                                "--dy": `${[-24, -20, -30][k]}px`,
+                                "--rot": `${[-40, 35, 15][k]}deg`,
+                                animationDelay: `${k * 90}ms`,
+                              } as React.CSSProperties
+                            }
+                            aria-hidden
+                          >
+                            {sp}
+                          </span>
+                        ))}
+                      {cheerLine(personaStyle, m.unlocked)}
+                    </span>
+                  </div>
+                )}
               </div>
             ) : (
               <div key={i} className="flex items-start gap-2">
-                <img src={avatar} alt="" width={30} height={30} className="mt-0.5 shrink-0 rounded-full" />
-                <div
-                  className="inline-block max-w-[85%] rounded-2xl px-4 py-2 text-sm"
-                  style={{ background: "var(--surface-2)", color: "var(--fg)" }}
-                >
-                  {m.text}
+                <span className="relative mt-0.5 shrink-0">
+                  <img src={avatar} alt="" width={30} height={30} className="rounded-full" />
+                  {/* Bình thường là sticker của persona; tin nhắn cuối khi phiên đã
+                      khép lại thì đổi theo kết cục (xong / hết lượt / kẹt / bỏ cuộc). */}
+                  <span
+                    className={
+                      "mood-badge" +
+                      (done && i === messages.length - 1 ? " sticker-in" : "")
+                    }
+                    aria-hidden
+                  >
+                    {done && i === messages.length - 1 && exitReason
+                      ? MOOD_EXIT[exitReason] ?? MOOD[personaStyle]
+                      : MOOD[personaStyle] ?? MOOD.ban_minh}
+                  </span>
+                </span>
+
+                <div className="min-w-0">
+                  <div
+                    className="inline-block max-w-[85%] rounded-2xl px-4 py-2 text-sm"
+                    style={{ background: "var(--surface-2)", color: "var(--fg)" }}
+                  >
+                    {m.text}
+                  </div>
+
                 </div>
               </div>
             )
@@ -267,13 +384,28 @@ export default function TeachClient({
           {/* Xưng hô đổi theo persona được bốc; đây là lời agent nên luôn tiếng Việt. */}
           {loading && (
             <div className="flex items-center gap-2">
-              <img src={avatar} alt="" width={30} height={30} className="shrink-0 rounded-full opacity-60" />
-              <span className="text-sm" style={{ color: "var(--fg-muted)" }}>
+              <span className="relative shrink-0">
+                <img src={avatar} alt="" width={30} height={30} className="rounded-full opacity-70" />
+                <span className="mood-badge" aria-hidden>
+                  💭
+                </span>
+              </span>
+
+              <span
+                className="inline-flex items-center gap-1.5 rounded-2xl px-4 py-2.5 text-sm"
+                style={{ background: "var(--surface-2)", color: "var(--fg-muted)" }}
+              >
                 {personaStyle === "convo_toi"
-                  ? "Tôi đang suy nghĩ…"
+                  ? "Tôi đang nghĩ"
                   : personaStyle === "senpai_em" || personaStyle === "thay_em"
-                  ? "Em đang suy nghĩ…"
-                  : "Bạn học đang nghĩ…"}
+                  ? "Em đang nghĩ"
+                  : "Bạn học đang nghĩ"}
+                {/* ba chấm nảy so le thay cho dấu "…" đứng yên */}
+                <span className="ml-0.5 inline-flex gap-1" aria-hidden>
+                  <i className="dot" />
+                  <i className="dot" />
+                  <i className="dot" />
+                </span>
               </span>
             </div>
           )}

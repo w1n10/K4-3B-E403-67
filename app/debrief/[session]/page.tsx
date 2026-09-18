@@ -48,7 +48,10 @@ export default async function DebriefPage({ params }: { params: Promise<{ sessio
       const isCovered = covered.has(i.id);
       return {
         id: i.id,
-        label: isCovered || !hiddenTodo ? i.label : null,
+        // KHÔNG BAO GIỜ gửi label của Ý chưa đạt xuống client — kể cả phiên kết thúc
+        // bình thường. Làm mờ ở CSS thôi là chưa đủ: chuỗi vẫn nằm trong payload RSC,
+        // mở DevTools là đọc được hết. Client tự dựng chữ giả để làm mờ.
+        label: isCovered ? i.label : null,
         source: i.source,
         covered: isCovered,
       };

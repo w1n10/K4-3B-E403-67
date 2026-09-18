@@ -119,7 +119,13 @@ export async function POST(req: NextRequest) {
   // ---- Học viên chủ động bỏ cuộc ----
   if (giveUp) {
     await db.endSession(sid, st.coveredIds.length / topic.items.length, "gave_up");
-    return NextResponse.json({ sessionId: sid, reply: null, coveredIds: st.coveredIds, done: true });
+    return NextResponse.json({
+      sessionId: sid,
+      reply: null,
+      coveredIds: st.coveredIds,
+      done: true,
+      exitReason: "gave_up",
+    });
   }
 
   st.history.push({ role: "student", text });
@@ -156,6 +162,7 @@ export async function POST(req: NextRequest) {
         reply,
         coveredIds: st.coveredIds,
         done: true,
+        exitReason: "stuck",
         slide: slideRef(targetItem),
       });
     }
@@ -233,7 +240,13 @@ export async function POST(req: NextRequest) {
   if (passed || capped) {
     await logTurn({ stage1_json: ev, covered_after: coveredIds });
     await db.endSession(sid, coverage, passed ? "completed" : "turn_cap");
-    return NextResponse.json({ sessionId: sid, reply: null, coveredIds, done: true });
+    return NextResponse.json({
+      sessionId: sid,
+      reply: null,
+      coveredIds,
+      done: true,
+      exitReason: passed ? "completed" : "turn_cap",
+    });
   }
 
   // ---- KẸT ----
@@ -252,6 +265,7 @@ export async function POST(req: NextRequest) {
       reply,
       coveredIds,
       done: true,
+      exitReason: "stuck",
       slide: slideRef(targetItem),
     });
   }

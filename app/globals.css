@@ -258,6 +258,100 @@ h3,
   transform: scale(0.975);
 }
 
+/* ---------- Sticker trong khung chat ---------- */
+
+/* Sticker bật ra rồi lắc nhẹ một nhịp */
+@keyframes sticker-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(-25deg);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.18) rotate(8deg);
+  }
+  75% {
+    transform: scale(0.96) rotate(-4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+.sticker-in {
+  animation: sticker-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ---------- Ăn mừng khi giảng trúng ý ---------- */
+
+.cheer {
+  position: relative;
+  display: inline-block;
+}
+
+/* Hạt nhỏ bắn ra theo hướng riêng từng hạt (--dx/--dy/--rot) */
+@keyframes cheer-particle {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.3) rotate(0deg);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(1.05) rotate(var(--rot));
+  }
+}
+.cheer-particle {
+  position: absolute;
+  left: 4px;
+  top: 30%;
+  font-size: 12px;
+  line-height: 1;
+  pointer-events: none;
+  animation: cheer-particle 0.95s ease-out both;
+}
+
+
+/* Huy hiệu cảm xúc nhỏ ở góc avatar */
+.mood-badge {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  font-size: 11px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.25));
+}
+
+/* Ba chấm "đang nghĩ" nảy so le */
+@keyframes dot-bounce {
+  0%,
+  70%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  35% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+.dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: dot-bounce 1.15s ease-in-out infinite;
+}
+.dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
 /* ---------- Checklist: trạng thái chờ mở khoá ---------- */
 
 .point-row {
@@ -323,7 +417,10 @@ h3,
   .btn-press,
   .point-row,
   .point-locked::before,
-  .point-badge {
+  .point-badge,
+  .sticker-in,
+  .cheer-particle,
+  .dot {
     animation: none !important;
     transition: none !important;
   }

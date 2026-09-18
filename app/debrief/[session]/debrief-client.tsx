@@ -14,7 +14,8 @@ export type DebriefData = {
   turnCount: number;
   totalItems: number;
   hiddenTodo: boolean;
-  /** label = null nghĩa là server cố tình KHÔNG gửi nội dung Ý đó xuống (phiên kẹt). */
+  /** label chỉ có giá trị khi covered = true. Ý chưa đạt luôn về null — server
+   *  không bao giờ gửi đáp án chưa kiếm được xuống client. */
   points: { id: string; label: string | null; source: string; covered: boolean }[];
   curve: number[];
   misconceptions: { id: string; label: string; open: boolean }[];
@@ -93,13 +94,9 @@ export default function DebriefClient({ d }: { d: DebriefData }) {
       <Section title={t("debrief.done")}>
         <ul className="space-y-2">
           {d.points.map((i) => {
-            // Ba trạng thái:
-            //   covered           -> hiện rõ, đây là lời chính học viên nói ra
-            //   chưa giảng được   -> mờ vĩnh viễn, KHÔNG có nút hiện; chỉ để lại mã
-            //                        đoạn tài liệu để học viên tự quay lại đọc
-            //   label === null    -> phiên kẹt, server không gửi nội dung xuống,
-            //                        chỉ còn vạch đánh dấu là "còn một Ý ở đây"
-            const locked = i.label === null;
+            // Hai trạng thái:
+            //   covered  -> hiện rõ, đây là lời chính học viên nói ra
+            //   chưa đạt -> mờ vĩnh viễn (chữ giả), chỉ để lại mã đoạn tài liệu
             return (
               <li
                 key={i.id}
@@ -117,30 +114,22 @@ export default function DebriefClient({ d }: { d: DebriefData }) {
 
                   {i.covered ? (
                     <span className="flex-1">{i.label}</span>
-                  ) : locked ? (
-                    // Không có nội dung để hiện — chỉ vạch mờ cho biết còn một Ý ở đây
-                    <span
-                      className="flex-1 select-none"
-                      style={{ color: "var(--fg-muted)", opacity: 0.55 }}
-                      aria-label={t("debrief.todoHidden")}
-                    >
-                      ▪▪▪▪▪▪▪▪▪▪▪▪▪▪
-                    </span>
                   ) : (
-                    // Ý chưa giảng được: để mờ VĨNH VIỄN, không có cách nào hiện ra.
-                    // Học viên phải quay lại tài liệu theo mã đoạn bên dưới, chứ
-                    // không được phát không đáp án ở màn tổng kết.
+                    // Ý chưa giảng được: luôn mờ, không có cách nào hiện ra.
+                    // Server không gửi nội dung thật xuống, nên đây là chữ giả —
+                    // độ dài suy từ id để mỗi dòng dài ngắn khác nhau, nhìn tự nhiên
+                    // như văn bản bị làm mờ chứ không phải một vạch đều tăm tắp.
                     <span
                       className="flex-1 select-none"
                       style={{ filter: "blur(5px)", opacity: 0.7 }}
                       aria-hidden
                     >
-                      {i.label}
+                      {fillerFor(i.id)}
                     </span>
                   )}
                 </div>
 
-                {!i.covered && !locked && (
+                {!i.covered && (
                   <div
                     className="mt-1.5 pl-6 font-mono text-xs"
                     style={{ color: "var(--fg-muted)" }}
@@ -221,6 +210,21 @@ export default function DebriefClient({ d }: { d: DebriefData }) {
       </p>
     </main>
   );
+}
+
+/**
+ * Chữ giả để làm mờ. Server không gửi nội dung Ý chưa đạt xuống nữa, nhưng vẫn cần
+ * một khối chữ để blur — nếu để trống thì dòng nào cũng y hệt nhau, nhìn ra ngay
+ * là placeholder. Độ dài suy từ id nên cố định giữa các lần render.
+ */
+const FILLER_WORDS =
+  "khái niệm cơ chế xác suất mô hình dữ liệu ngữ cảnh huấn luyện giới hạn token suy luận".split(" ");
+
+function fillerFor(id: string): string {
+  let h = 0;
+  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const count = 7 + (h % 7); // 7..13 từ
+  return Array.from({ length: count }, (_, k) => FILLER_WORDS[(h + k * 7) % FILLER_WORDS.length]).join(" ");
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
