@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useT } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
+import type { PersonaStyleId } from "@/lib/types";
 
 type Item = { id: string; label: string };
 type Msg = { role: "student" | "agent"; text: string };
@@ -16,10 +17,14 @@ export default function TeachClient({
   topicId,
   title,
   items,
+  initialQuestion,
+  personaStyle = "ban_minh",
 }: {
   topicId: string;
   title: string;
   items: Item[];
+  initialQuestion?: string;
+  personaStyle?: PersonaStyleId;
 }) {
   const { t } = useT();
   const { theme } = useTheme();
@@ -46,15 +51,20 @@ export default function TeachClient({
 
   // Lời thoại của agent LUÔN tiếng Việt, không theo toggle EN/VI — toggle chỉ đổi
   // nhãn nút và tiêu đề. Giữ giống hệt các câu do Stage 0/Stage 2 sinh ra ở backend.
+  //
+  // Câu mở đầu ưu tiên initialQuestion do server soạn (đã khớp persona được bốc),
+  // không có thì dùng câu chào mặc định theo tên chủ đề.
   const messages = useMemo<Msg[]>(
     () => [
       {
         role: "agent",
-        text: `Chào bạn! Mình nghe nói tới "${title}" mà đọc mãi vẫn không hiểu gì cả. Bạn giảng lại cho mình được không?`,
+        text:
+          initialQuestion ??
+          `Chào bạn! Mình nghe nói tới "${title}" mà đọc mãi vẫn không hiểu gì cả. Bạn giảng lại cho mình được không?`,
       },
       ...turns,
     ],
-    [turns, title]
+    [turns, title, initialQuestion]
   );
 
   const endRef = useRef<HTMLDivElement>(null);
@@ -75,7 +85,13 @@ export default function TeachClient({
       const res = await fetch("/api/checkpoint", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, text, topicId, testerCode: testerCode || "U00" }),
+        body: JSON.stringify({
+          sessionId,
+          text,
+          topicId,
+          testerCode: testerCode || "U00", // effect chưa kịp chạy thì vẫn có mã mặc định
+          personaStyle,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? `Lỗi ${res.status}`);
@@ -207,11 +223,16 @@ export default function TeachClient({
             )
           )}
 
+          {/* Xưng hô đổi theo persona được bốc; đây là lời agent nên luôn tiếng Việt. */}
           {loading && (
             <div className="flex items-center gap-2">
               <img src={avatar} alt="" width={30} height={30} className="shrink-0 rounded-full opacity-60" />
               <span className="text-sm" style={{ color: "var(--fg-muted)" }}>
-                {t("teach.thinking")}
+                {personaStyle === "convo_toi"
+                  ? "Tôi đang suy nghĩ…"
+                  : personaStyle === "senpai_em" || personaStyle === "thay_em"
+                  ? "Em đang suy nghĩ…"
+                  : "Bạn học đang nghĩ…"}
               </span>
             </div>
           )}

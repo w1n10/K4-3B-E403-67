@@ -14,11 +14,13 @@ import { evaluate, PROMPT_VERSION } from "@/lib/evaluator";
 import { speak } from "@/lib/persona";
 import { db } from "@/lib/db";
 import { MODEL_EVALUATOR } from "@/lib/llm";
-import type { SessionWithTurns, Stage1Output, TurnRecord } from "@/lib/types";
+import type { PersonaStyleId, SessionWithTurns, Stage1Output, TurnRecord } from "@/lib/types";
 
 const TURN_CAP = 8;
 const COVERAGE_TO_PASS = 5 / 7;
 
+// personaStyle KHÔNG nằm trong State: nó do client giữ và gửi kèm mỗi request,
+// nên không cần dựng lại từ DB (và cũng không có cột nào trong bảng sessions).
 type State = {
   coveredIds: string[];
   openMisconceptions: string[];
@@ -53,8 +55,11 @@ export async function POST(req: NextRequest) {
     text,
     topicId = "llm-hallucination",
     testerCode = "U00",
+    personaStyle = "ban_minh",
     giveUp = false,
   } = await req.json();
+
+  const style = personaStyle as PersonaStyleId;
 
   const topic = loadTopic(topicId);
 
@@ -94,7 +99,7 @@ export async function POST(req: NextRequest) {
     });
 
   // ---- STAGE 0: chặn trước, 0 token ----
-  const guard = runGuard(text, topic);
+  const guard = runGuard(text, topic, st.history, style);
   if (guard.blocked) {
     await logTurn({ stage0_verdict: guard.verdict, stage2_reply: guard.reply });
     return NextResponse.json({
@@ -145,6 +150,7 @@ export async function POST(req: NextRequest) {
         ? topic.misconceptions.find((m) => m.id === openMisconceptions[0])?.label
         : undefined,
       turn_index: st.turnIndex,
+      persona_style: style,
     });
   } catch (e) {
     const msg = (e as Error).message;
