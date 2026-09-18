@@ -8,8 +8,13 @@ from collections import Counter, defaultdict
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
-workspace_dir = r"e:\AI In Action\Hackathon\K4-3B-E403-67"
-csv_path = os.path.join(workspace_dir, "tutor_turns.csv")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+workspace_dir = os.path.join(BASE_DIR, "evidence")
+os.makedirs(workspace_dir, exist_ok=True)
+
+csv_path = os.path.join(BASE_DIR, "data", "vlearn-pack", "chatlog", "tutor_turns.csv")
+if not os.path.exists(csv_path):
+    csv_path = os.path.join(BASE_DIR, "tutor_turns.csv")
 
 trang_q_re = re.compile(r'\((?:Trang|Page|Slide)\s*(\d+)', re.IGNORECASE)
 part_q_re = re.compile(r'\((?:Đang học phần|Currently on the part)\s*[“"\'`]([^”"\'`]+)[”"\'`]', re.IGNORECASE)

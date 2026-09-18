@@ -84,84 +84,11 @@ def create_schema(cursor):
     );
     """)
 
-    # 3. BẢNG RUNTIME D3: TOPICS & CHECKLIST & MISCONCEPTIONS (Theo docs/architecture.md §3)
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS topics (
-        topic_id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        source_lecture TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS checklist_items (
-        id TEXT,
-        topic_id TEXT,
-        label TEXT NOT NULL,
-        source_marker TEXT,
-        excerpt TEXT,
-        PRIMARY KEY (topic_id, id),
-        FOREIGN KEY (topic_id) REFERENCES topics(topic_id) ON DELETE CASCADE
-    );
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS misconceptions (
-        id TEXT,
-        topic_id TEXT,
-        label TEXT NOT NULL,
-        source_turn_id TEXT,
-        PRIMARY KEY (topic_id, id),
-        FOREIGN KEY (topic_id) REFERENCES topics(topic_id) ON DELETE CASCADE
-    );
-    """)
-
-    # 4. BẢNG RUNTIME D3: SESSIONS & TURNS (Theo docs/architecture.md §6)
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS sessions (
-        id TEXT PRIMARY KEY,
-        tester_code TEXT NOT NULL,
-        topic_id TEXT,
-        model TEXT,
-        prompt_version TEXT,
-        started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        ended_at TIMESTAMP,
-        final_coverage REAL,
-        exit_reason TEXT,
-        FOREIGN KEY (topic_id) REFERENCES topics(topic_id)
-    );
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS turns (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        session_id TEXT,
-        turn_index INTEGER NOT NULL,
-        student_text TEXT NOT NULL,
-        stage0_verdict TEXT,
-        stage1_json TEXT,
-        stage2_reply TEXT,
-        covered_after TEXT,
-        latency_ms INTEGER,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
-    );
-    """)
-
-    # 5. BẢNG GOLDEN SET TEST CASES
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS golden_cases (
-        case_id TEXT PRIMARY KEY,
-        topic_id TEXT,
-        student_text TEXT NOT NULL,
-        expected_covered TEXT,
-        expected_missing TEXT,
-        expected_misconception TEXT,
-        source_turn_id TEXT,
-        notes TEXT
-    );
-    """)
+    # Runtime của sản phẩm KHÔNG nằm ở đây.
+    # topics/checklist/misconceptions  → content/<topic>.json (app đọc trực tiếp)
+    # sessions/turns                   → SessionStore adapter, xem docs/architecture.md §6
+    # golden_cases                     → golden/cases.json (vlearn.db bị gitignore nên
+    #                                     bảng trong DB vô hình với người chấm)
 
     # TẠO INDEX ĐỂ QUERY PHÂN TÍCH NHANH TRÊN HÀNG VẠN DÒNG
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_raw_lecture ON raw_tutor_turns(course_id, lecture_code);")
@@ -345,36 +272,6 @@ def build_hotspots_summary(conn):
     hs_count = cursor.fetchone()[0]
     print(f"[✓] Đã tạo {hs_count} hotspots (theo Slide và Module/Part có >= 5 câu hỏi).")
 
-def seed_sample_topic(conn):
-    """Seed mẫu topic theo đúng docs/architecture.md để ứng dụng Next.js có thể chạy thử ngay"""
-    cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM topics;")
-    if cursor.fetchone()[0] == 0:
-        cursor.execute("""
-        INSERT INTO topics (topic_id, title, source_lecture)
-        VALUES ('llm-hallucination', 'Vì sao LLM bịa', 'transcript-06');
-        """)
-
-        checklist = [
-            ('K1', 'llm-hallucination', 'LLM dự đoán token kế tiếp theo xác suất, không tra cứu dữ kiện', 'T06-142', 'LLM hoạt động dựa trên xác suất chuỗi từ...'),
-            ('K2', 'llm-hallucination', 'Không có cơ chế tự phân biệt "biết" và "không biết"', 'T06-151', 'Mô hình không thể tự biết liệu nó có đang nhớ đúng hay không...')
-        ]
-        cursor.executemany("""
-        INSERT INTO checklist_items (id, topic_id, label, source_marker, excerpt)
-        VALUES (?, ?, ?, ?, ?);
-        """, checklist)
-
-        misconceptions = [
-            ('M1', 'llm-hallucination', 'Nghĩ LLM có database tra cứu bên trong', 'T00824')
-        ]
-        cursor.executemany("""
-        INSERT INTO misconceptions (id, topic_id, label, source_turn_id)
-        VALUES (?, ?, ?, ?);
-        """, misconceptions)
-        
-        conn.commit()
-        print("[✓] Đã seed sẵn chủ đề mẫu 'llm-hallucination' (theo docs/architecture.md §3).")
-
 def main():
     csv_file = get_csv_path()
     
@@ -385,8 +282,7 @@ def main():
     create_schema(conn)
     import_tutor_turns(conn, csv_file)
     build_hotspots_summary(conn)
-    seed_sample_topic(conn)
-    
+
     # In kiểm tra nhanh Top 5 Hotspots trong khoá K4 (Module/Part có nhiều câu hỏi nhất)
     cursor = conn.cursor()
     print("\n--- TOP 5 HOTSPOTS CỦA KHOÁ K4 (DỮ LIỆU THỰC TẾ) ---")
