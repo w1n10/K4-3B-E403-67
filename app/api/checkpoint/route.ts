@@ -9,7 +9,7 @@ import { evaluate, PROMPT_VERSION } from "@/lib/evaluator";
 import { speak } from "@/lib/persona";
 import { db } from "@/lib/db";
 import { MODEL_EVALUATOR } from "@/lib/llm";
-import type { Stage1Output, TurnRecord } from "@/lib/types";
+import type { PersonaStyleId, Stage1Output, TurnRecord } from "@/lib/types";
 
 const TURN_CAP = 8;
 const COVERAGE_TO_PASS = 5 / 7;
@@ -21,12 +21,19 @@ type State = {
   openMisconceptions: string[];
   turnIndex: number;
   history: { role: "student" | "agent"; text: string }[];
+  personaStyle: PersonaStyleId;
 };
 const states = new Map<string, State>();
 
 export async function POST(req: NextRequest) {
   const t0 = Date.now();
-  const { sessionId, text, topicId = "llm-hallucination", testerCode = "U00" } = await req.json();
+  const {
+    sessionId,
+    text,
+    topicId = "llm-hallucination",
+    testerCode = "U00",
+    personaStyle = "ban_minh",
+  } = await req.json();
 
   const topic = loadTopic(topicId);
 
@@ -34,7 +41,13 @@ export async function POST(req: NextRequest) {
   let sid = sessionId as string | undefined;
   if (!sid) {
     sid = await db.createSession(testerCode, topicId, MODEL_EVALUATOR, PROMPT_VERSION);
-    states.set(sid, { coveredIds: [], openMisconceptions: [], turnIndex: 0, history: [] });
+    states.set(sid, {
+      coveredIds: [],
+      openMisconceptions: [],
+      turnIndex: 0,
+      history: [],
+      personaStyle: (personaStyle as PersonaStyleId) || "ban_minh",
+    });
   }
   const st = states.get(sid);
   if (!st) return NextResponse.json({ error: "Phiên không tồn tại" }, { status: 404 });
@@ -43,7 +56,7 @@ export async function POST(req: NextRequest) {
   st.history.push({ role: "student", text });
 
   // ---- STAGE 0: chặn trước, 0 token ----
-  const guard = runGuard(text, topic);
+  const guard = runGuard(text, topic, st.history, st.personaStyle);
   if (guard.blocked) {
     st.history.push({ role: "agent", text: guard.reply });
     await db.appendTurn(sid, {
@@ -111,6 +124,7 @@ export async function POST(req: NextRequest) {
         ? topic.misconceptions.find((m) => m.id === ev.misconception[0].id)?.label
         : undefined,
       turn_index: st.turnIndex,
+      persona_style: st.personaStyle,
     });
   } catch (e) {
     return NextResponse.json({ error: `Stage 2 lỗi: ${(e as Error).message}` }, { status: 502 });

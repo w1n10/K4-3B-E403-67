@@ -19,6 +19,7 @@ export type Topic = {
   topic_id: string;
   title: string;
   source_lecture: string;
+  starter_questions?: string[];
   items: ChecklistItem[];
   misconceptions: Misconception[];
   excerpts: Record<string, string>;
@@ -51,11 +52,14 @@ export type Stage1Output = {
 // Chỉ nhận bấy nhiêu. KHÔNG có items, KHÔNG có excerpts, KHÔNG có label mục thiếu.
 // Đáp án không bao giờ rời khỏi Stage 1 — xem docs/architecture.md §2.
 
+export type PersonaStyleId = "ban_minh" | "convo_toi" | "senpai_em" | "thay_em";
+
 export type Stage2Input = {
   history: { role: "student" | "agent"; text: string }[];
   probe_question: string;
   misconception_hint?: string;
   turn_index: number;
+  persona_style?: PersonaStyleId;
 };
 
 // ---------- LƯU PHIÊN ----------

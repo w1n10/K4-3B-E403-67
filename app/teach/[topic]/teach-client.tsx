@@ -6,6 +6,7 @@
 //  2. Mục checklist CHƯA đạt thì KHÔNG hiện label — hiện ra là học viên đọc được đáp án.
 
 import { useEffect, useRef, useState } from "react";
+import type { PersonaStyleId } from "@/lib/types";
 
 type Item = { id: string; label: string };
 type Msg = { role: "student" | "agent"; text: string };
@@ -14,17 +15,23 @@ export default function TeachClient({
   topicId,
   title,
   items,
+  initialQuestion,
+  personaStyle = "ban_minh",
 }: {
   topicId: string;
   title: string;
   items: Item[];
+  initialQuestion?: string;
+  personaStyle?: PersonaStyleId;
 }) {
   const [testerCode, setTesterCode] = useState("U00");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Msg[]>([
     {
       role: "agent",
-      text: `Chào bạn! Mình nghe nói tới "${title}" mà đọc mãi vẫn không hiểu gì cả. Bạn giảng lại cho mình được không?`,
+      text:
+        initialQuestion ??
+        `Chào bạn! Mình nghe giảng viên nói LLM không hề đọc hiểu câu chữ như con người, mà bản chất chỉ là tính xác suất đoán token tiếp theo. Chỗ này hoạt động như thế nào vậy bạn?`,
     },
   ]);
   const [coveredIds, setCoveredIds] = useState<string[]>([]);
@@ -51,7 +58,7 @@ export default function TeachClient({
       const res = await fetch("/api/checkpoint", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, text, topicId, testerCode }),
+        body: JSON.stringify({ sessionId, text, topicId, testerCode, personaStyle }),
       });
       const data = await res.json();
 
@@ -97,7 +104,17 @@ export default function TeachClient({
             </div>
           ))}
 
-          {loading && <div className="text-sm text-slate-400">Bạn học đang nghĩ…</div>}
+          {loading && (
+            <div className="text-sm text-slate-400">
+              {personaStyle === "thay_em"
+                ? "Em đang suy nghĩ…"
+                : personaStyle === "senpai_em"
+                ? "Em đang suy nghĩ…"
+                : personaStyle === "convo_toi"
+                ? "Tôi đang suy nghĩ…"
+                : "Bạn học đang nghĩ…"}
+            </div>
+          )}
 
           {done && (
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm">
