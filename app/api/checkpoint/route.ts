@@ -53,11 +53,17 @@ export async function POST(req: NextRequest) {
   const {
     sessionId,
     text,
-    topicId = "llm-hallucination",
+    topicId,
     testerCode = "U00",
     personaStyle = "ban_minh",
     giveUp = false,
   } = await req.json();
+
+  // Không đặt mặc định một chủ đề cụ thể: có nhiều chủ đề, đoán bừa thì phiên
+  // sẽ được chấm theo checklist của bài khác mà không ai nhận ra.
+  if (!topicId) {
+    return NextResponse.json({ error: "Thiếu topicId" }, { status: 400 });
+  }
 
   const style = personaStyle as PersonaStyleId;
 
