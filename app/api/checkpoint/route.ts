@@ -26,7 +26,7 @@ const states = new Map<string, State>();
 
 export async function POST(req: NextRequest) {
   const t0 = Date.now();
-  const { sessionId, text, topicId = "llm-hallucination", testerCode = "U00" } = await req.json();
+  const { sessionId, text, topicId = "day01-llm-foundation", testerCode = "U00" } = await req.json();
 
   const topic = loadTopic(topicId);
 

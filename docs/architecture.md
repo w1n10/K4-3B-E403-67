@@ -171,9 +171,11 @@ lib/
   evaluator.ts    Stage 1 + prompt                             · Khôi
   persona.ts      Stage 2 + prompt                             · Dương
   llm.ts          adapter đổi model                            · Dương
-  supabase.ts                                                  · Hiếu
+  db.ts           interface SessionStore + chọn store          · Hiếu
+  supabase-store.ts  SessionStore trên Supabase               · Hiếu
 content/
-  llm-hallucination.json   checklist + trích đoạn              · Huy
+  <topic>.json    checklist + trích đoạn, SINH TỪ vlearn.db    · Huy
+                  (scripts/seed_content.py → scripts/export_content.py)
 golden/
   cases.json      ≥20 case                                     · Hiếu
   run.ts          npm run golden                               · Hiếu

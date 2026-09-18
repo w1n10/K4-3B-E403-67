@@ -2,6 +2,7 @@
 // Orchestrator và UI KHÔNG BAO GIỜ được viết SQL trực tiếp, chỉ gọi qua interface này.
 
 import type { ExitReason, SessionRecord, SessionWithTurns, TurnRecord } from "./types";
+import { SupabaseStore } from "./supabase-store";
 
 export interface SessionStore {
   createSession(testerCode: string, topicId: string, model: string, promptVersion: string): Promise<string>;
@@ -67,4 +68,13 @@ export class MemoryStore implements SessionStore {
 // để không mất phiên đang chạy mỗi lần sửa code.
 const g = globalThis as unknown as { __store?: SessionStore };
 
-export const db: SessionStore = g.__store ?? (g.__store = new MemoryStore());
+function pickStore(): SessionStore {
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
+    console.log("[db] SupabaseStore — log phiên được lưu thật");
+    return new SupabaseStore();
+  }
+  console.warn("[db] MemoryStore — LOG SẼ MẤT KHI RESTART. Đặt SUPABASE_URL + SUPABASE_SERVICE_KEY trước khi cho tester chạy.");
+  return new MemoryStore();
+}
+
+export const db: SessionStore = g.__store ?? (g.__store = pickStore());

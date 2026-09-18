@@ -58,17 +58,22 @@ Theo quy định bắt buộc của Hackathon và `README.md` (§"Bảo mật d�
 
 ---
 
-## 3. Runtime của sản phẩm KHÔNG nằm ở đây
+## 3. Tầng authoring nội dung: DB biên soạn, JSON là artifact
 
-Trước đây `init_db.py` tạo thêm 5 bảng runtime (`topics`, `checklist_items`, `misconceptions`, `sessions`, `turns`, `golden_cases`). **Đã bỏ.** Lý do: `vlearn.db` bị `.gitignore` chặn, nên mọi thứ nằm trong đó đều **vô hình với người chấm**.
+`vlearn.db` giữ **tầng authoring** nội dung: `topics`, `checklist_items`, `excerpts`, `misconceptions` — schema bám đúng type `Topic` trong `lib/types.ts`. Vì DB bị `.gitignore`, nội dung phải **export ra file commit được**:
 
-Chúng chuyển đi đâu:
+```bash
+python scripts/seed_content.py      # ghi nội dung biên soạn vào vlearn.db (script = bản ghi tái lập DB)
+python scripts/export_content.py    # vlearn.db → content/<topic_id>.json
+```
 
-| Dữ liệu | Giờ nằm ở |
-|---|---|
-| `topics`, `checklist_items`, `misconceptions` | `content/<topic>.json` — app đọc trực tiếp, không cần DB |
-| `sessions`, `turns` | `SessionStore` adapter — xem [architecture.md §6](architecture.md#6-lưu-phiên-học) |
-| `golden_cases` | `golden/cases.json` — file commit được |
+| Dữ liệu | Nằm ở | Ai đọc |
+|---|---|---|
+| `topics`, `checklist_items`, `excerpts`, `misconceptions` | `vlearn.db` (authoring) → `content/<topic>.json` (artifact commit) | app, qua `lib/content.ts` |
+| `sessions`, `turns` | Supabase `SessionStore` — xem [architecture.md §6](architecture.md#6-lưu-phiên-học) | app + dashboard giảng viên |
+| `golden_cases` | `golden/cases.json` | golden set |
+
+App **không bao giờ** đọc DB cho nội dung — chỉ đọc `content/*.json`. Bảng `sessions`/`turns` không nằm trong `vlearn.db`.
 
 ---
 
@@ -223,7 +228,7 @@ conn.close()
 
 - [x] Đã chạy `python scripts/init_db.py` tạo `vlearn.db`.
 - [x] Đã cấu hình `.gitignore` chặn rò rỉ dữ liệu `*.db`, `*.csv`.
-- [ ] Chọn 1 chủ đề trọng tâm từ Top Hotspots (Khuyến nghị: `day03-tu-chatbot-den-agentic-agent-react` hoặc `llm-hallucination`).
-- [ ] Rút 5–7 checklist items (`K1..K7`) và 2–3 misconceptions (`M1..M3`) đưa vào `content/<topic>.json`.
+- [x] Chọn 2 chủ đề khớp 2 bộ slide: `day01-llm-foundation`, `day02-xac-dinh-bai-toan-kinh-doanh-cho-ai`.
+- [x] Biên soạn 5–7 item + 2–3 misconception/topic vào tầng authoring (`scripts/seed_content.py`) rồi export ra `content/<topic>.json` (`scripts/export_content.py`).
 - [ ] Dùng các câu hỏi thật đã query để xây dựng Golden Set (≥ 20 case) trong `golden/cases.json`.
 - [ ] **Viết `evidence/mining-report.md`** — số + SQL + ≥5 quote có `turn_id` + bảng impact + ứng viên đã loại (§4).
