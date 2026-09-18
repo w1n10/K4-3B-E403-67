@@ -33,7 +33,6 @@ import type {
 } from "@/lib/types";
 
 const TURN_CAP = 8;
-const COVERAGE_TO_PASS = 5 / 7;
 
 // personaStyle KHÔNG nằm trong State: nó do client giữ và gửi kèm mỗi request,
 // nên không cần dựng lại từ DB (và cũng không có cột nào trong bảng sessions).
@@ -226,7 +225,9 @@ export async function POST(req: NextRequest) {
   }
 
   const coverage = coveredIds.length / topic.items.length;
-  const passed = coverage >= COVERAGE_TO_PASS && openMisconceptions.length === 0;
+  // Phải phủ ĐỦ mọi Ý mới coi là xong. Trước đây chỉ cần 5/7 nên phiên tự kết thúc
+  // khi còn 2 Ý chưa hề nhắc tới — học viên mất luôn cơ hội giảng nốt phần đó.
+  const passed = coveredIds.length >= topic.items.length && openMisconceptions.length === 0;
   const capped = st.turnIndex >= TURN_CAP;
 
   if (passed || capped) {

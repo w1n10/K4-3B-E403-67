@@ -103,7 +103,7 @@ npm run export-logs    # kéo log từ Supabase về logs/
 
 Mở `/` → chọn chủ đề → vào `/teach/<topic_id>` → gõ lời giảng. Lượt đầu chưa có `sessionId` sẽ tự mở phiên mới; đổi "Mã tester" (mặc định `U00`) trước khi gửi lượt đầu.
 
-Điều kiện dừng phiên (`app/api/checkpoint/route.ts:14`): `coverage ≥ 5/7` và không còn misconception mở, hoặc chạm `TURN_CAP = 8`.
+Điều kiện dừng phiên (`app/api/checkpoint/route.ts`): phủ **đủ mọi Ý** của bài và không còn misconception mở, hoặc chạm `TURN_CAP = 8`, hoặc kẹt (`lib/stuck.ts`).
 
 ---
 

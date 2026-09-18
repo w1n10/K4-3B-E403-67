@@ -138,7 +138,7 @@ Output: 1–2 câu, giọng học trò tò mò, kết thúc bằng một câu h�
 3. **Stage 1** → JSON evaluation
 4. **Orchestrator** gộp `covered` vào state phiên
 5. Xét điều kiện thoát:
-   - `coverage ≥ 5/7` **và** không còn misconception mở → sang Debrief (`exit_reason: completed`)
+   - phủ **đủ mọi Ý** của bài **và** không còn misconception mở → sang Debrief (`exit_reason: completed`)
    - chạm trần **8 lượt** → Debrief (`exit_reason: turn_cap`)
 6. **Luật kẹt** (`lib/stuck.ts`), đếm chuỗi lượt *không tiến bộ* liên tiếp (sai câu hỏi vừa rồi, hoặc bỏ cuộc):
    - lần thứ **3** → không gọi Stage 2, trả câu nhắc xem lại bài giảng kèm đúng slide của Ý đang kẹt; client hiện nút mở `/slides/<topic>?page=N` ở tab riêng
