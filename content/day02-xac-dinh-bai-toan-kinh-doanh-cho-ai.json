@@ -1,0 +1,115 @@
+{
+  "topic_id": "day02-xac-dinh-bai-toan-kinh-doanh-cho-ai",
+  "title": "Day 2 — Xác định bài toán kinh doanh cho AI",
+  "source_lecture": "transcript-01",
+  "items": [
+    {
+      "id": "K1",
+      "label": "70% giá trị khi đưa AI vào doanh nghiệp đến từ con người và vận hành, không phải từ công nghệ",
+      "source": "T01-003",
+      "keywords": [
+        "AI adoption",
+        "vận hành",
+        "con người"
+      ]
+    },
+    {
+      "id": "K2",
+      "label": "Đề bài thường mơ hồ (vd \"làm AI chatbot support\"); phải đào ra vấn đề thật phía sau bằng Five Whys thay vì nhảy thẳng vào giải pháp",
+      "source": "T01-032",
+      "keywords": [
+        "Five Whys",
+        "đề bài mơ hồ",
+        "pain point"
+      ]
+    },
+    {
+      "id": "K3",
+      "label": "Double Diamond có hai pha phân kỳ rồi hội tụ: viên một để tìm đúng vấn đề, viên hai để tìm đúng giải pháp; làm đúng cái sai nguy hiểm hơn làm sai cái đúng",
+      "source": "T01-049",
+      "keywords": [
+        "Double Diamond",
+        "phân kỳ",
+        "hội tụ",
+        "problem discovery"
+      ]
+    },
+    {
+      "id": "K4",
+      "label": "Sản phẩm AI khác sản phẩm truyền thống: AI trả lời theo xác suất nên không lặp lại y hệt, kỳ vọng người dùng tăng nhanh và chi phí chuyển đổi thấp nên cạnh tranh gay gắt",
+      "source": "T01-021",
+      "keywords": [
+        "sản phẩm AI",
+        "xác suất",
+        "chi phí chuyển đổi"
+      ]
+    },
+    {
+      "id": "K5",
+      "label": "Cách chắc nhất để có insight là quan sát người dùng thật và dogfooding — tự làm người dùng đầu tiên của sản phẩm mình",
+      "source": "T01-042",
+      "keywords": [
+        "dogfooding",
+        "quan sát",
+        "user research"
+      ]
+    },
+    {
+      "id": "K6",
+      "label": "Phải định lượng bài toán và viết thành problem statement: đối tượng, workflow hiện tại, nút thắt, chỉ số thành công (tiết kiệm bao nhiêu thời gian/tiền)",
+      "source": "T02-018",
+      "keywords": [
+        "problem statement",
+        "định lượng",
+        "chỉ số thành công"
+      ]
+    },
+    {
+      "id": "K7",
+      "label": "Chọn mức tự động hoá theo phổ automation–augmentation: bắt đầu từ augmentation (người giám sát) rồi mới tăng dần; việc có hậu quả lớn phải giữ con người trong vòng lặp",
+      "source": "T02-033",
+      "keywords": [
+        "automation",
+        "augmentation",
+        "human in the loop"
+      ]
+    }
+  ],
+  "misconceptions": [
+    {
+      "id": "M1",
+      "label": "Nghĩ bài toán AI bắt đầu từ dữ liệu/model, không phải từ việc xác định vấn đề trước",
+      "evidence_turn_ids": [
+        "T11447",
+        "T11440"
+      ],
+      "note": "Học viên đề xuất đảo thứ tự thành problem scoping → business state → data readiness → model choice"
+    },
+    {
+      "id": "M2",
+      "label": "Mặc định AI/agent là lời giải, chưa xét các mức đơn giản hơn (không AI, rule, workflow)",
+      "evidence_turn_ids": [
+        "T11535",
+        "T11537"
+      ],
+      "note": "Học viên yêu cầu so sánh No AI / Rule / Workflow / Agent và xin ví dụ về rule, workflow"
+    },
+    {
+      "id": "M3",
+      "label": "Nhầm chỉ số ở giữa (số user, lượt quay lại) là chỉ số thành công cuối cùng của sản phẩm",
+      "evidence_turn_ids": [
+        "T09066"
+      ],
+      "note": "Liên hệ câu hỏi \"chỉ số kết quả giống như lái xe bằng gương chiếu hậu\""
+    }
+  ],
+  "excerpts": {
+    "T01-003": "Việc đưa AI vào ứng dụng, đặc biệt trong doanh nghiệp, thì 70% của nó đến từ con người và vận hành chứ không phải đến từ công nghệ.",
+    "T01-021": "Chi phí chuyển đổi giữa một sản phẩm này sang một sản phẩm khác bây giờ rẻ hơn rất nhiều.",
+    "T01-032": "Từ cái đề bài, các bạn hãy cố gắng khai thác được cái vấn đề thực sự ở phía sau... Đừng lạm dụng AI quá.",
+    "T01-042": "Dogfooding là một cách thức xây dựng sản phẩm mà bạn là user và bạn dùng chính sản phẩm của bạn.",
+    "T01-049": "Viên thứ nhất giúp chúng ta tìm ra đúng vấn đề, viên thứ hai giúp chúng ta tìm ra đúng giải pháp cho vấn đề đấy.",
+    "T02-018": "Chúng ta phải định lượng được bài toán đấy... làm cái này tôi sẽ tiết kiệm được bao nhiêu giờ công.",
+    "T02-033": "Thường người ta sẽ bắt đầu với augmentation trước — tăng cường trước, tức là luôn có con người giám sát ở đấy — sau đấy mới tăng dần mức độ automate lên."
+  }
+}

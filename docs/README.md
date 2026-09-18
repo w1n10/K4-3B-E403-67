@@ -63,7 +63,7 @@ Học viên gõ lời giải thích
 | `lib/evaluator.ts` | Stage 1: prompt chấm + `PROMPT_VERSION`, `temperature: 0`. |
 | `lib/persona.ts` | Stage 2: prompt giọng học trò. |
 | `lib/llm.ts` | Adapter model: Gemini mặc định, tự chuyển Claude nếu có `ANTHROPIC_API_KEY`. Có retry khi JSON hỏng. |
-| `lib/content.ts` | Đọc `content/<topic>.json`, cache trong RAM. |
+| `lib/content.ts` | Đọc `content/<topic>.json`, cache trong RAM. File này là artifact sinh từ `vlearn.db` bằng `scripts/export_content.py` — xem `data-pipeline.md §3`. |
 | `lib/types.ts` | Hợp đồng dữ liệu giữa các tầng (`Stage1Output`, `TurnRecord`…). **Sửa file này phải báo cả nhóm.** |
 | `lib/supabase-store.ts` | `SessionStore` trên Supabase PostgREST (gọi bằng `fetch`, không cần SDK). |
 | `lib/db.ts` | Interface `SessionStore` + `pickStore()`: có `SUPABASE_URL` + `SUPABASE_SERVICE_KEY` thì dùng Supabase, không thì `MemoryStore`. |
@@ -160,7 +160,7 @@ Chạy trong SQL Editor:
 
 ```sql
 insert into sessions (tester_code, topic_id, model, prompt_version)
-values ('U00', 'llm-hallucination', 'test', 'v0')
+values ('U00', 'day01-llm-foundation', 'test', 'v0')
 returning id, tester_code, started_at;
 
 delete from sessions where tester_code = 'U00';
