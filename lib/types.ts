@@ -79,6 +79,8 @@ export type Stage2Input = {
 export type ExitReason = "completed" | "gave_up" | "turn_cap" | "stuck";
 
 export type TurnRecord = {
+  /** Thời điểm ghi lượt. Dùng để chặn spam — xem luật cooldown ở api/checkpoint. */
+  created_at?: string;
   turn_index: number;
   student_text: string;
   stage0_verdict: Stage0Verdict | null;

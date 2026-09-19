@@ -34,6 +34,12 @@ import type {
 
 const TURN_CAP = 8;
 
+// Khoảng cách tối thiểu giữa hai lượt của cùng một phiên.
+// Mỗi lượt hợp lệ tốn 2 lời gọi model, nên gửi dồn dập vừa đốt quota vừa làm
+// Stage 1 chấm trên lịch sử chưa kịp ghi. Mốc thời gian lấy từ DB chứ không giữ
+// trong biến module — serverless mỗi request một instance, biến module vô dụng.
+const MIN_GAP_MS = 3000;
+
 // personaStyle KHÔNG nằm trong State: nó do client giữ và gửi kèm mỗi request,
 // nên không cần dựng lại từ DB (và cũng không có cột nào trong bảng sessions).
 type State = {
@@ -126,6 +132,22 @@ export async function POST(req: NextRequest) {
       done: true,
       exitReason: "gave_up",
     });
+  }
+
+  // ---- Chặn gửi dồn dập ----
+  // Đặt SAU nhánh giveUp (bấm dừng phải luôn ăn) và TRƯỚC mọi lời gọi model.
+  const lastAt = prev?.turns.at(-1)?.created_at;
+  if (lastAt) {
+    const waited = Date.now() - new Date(lastAt).getTime();
+    if (waited < MIN_GAP_MS) {
+      return NextResponse.json(
+        {
+          error: "Bạn gửi hơi nhanh, chờ một chút rồi gửi tiếp nhé.",
+          retryAfterMs: MIN_GAP_MS - waited,
+        },
+        { status: 429 }
+      );
+    }
   }
 
   st.history.push({ role: "student", text });

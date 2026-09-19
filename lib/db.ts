@@ -40,7 +40,12 @@ export class MemoryStore implements SessionStore {
   }
 
   async appendTurn(sessionId: string, turn: TurnRecord) {
-    this.sessions.get(sessionId)?.turns.push(turn);
+    // Supabase có DEFAULT now(); bản in-memory phải tự đóng dấu để luật
+    // chặn spam hoạt động giống nhau ở cả hai store.
+    this.sessions.get(sessionId)?.turns.push({
+      created_at: new Date().toISOString(),
+      ...turn,
+    });
   }
 
   async endSession(sessionId: string, coverage: number, reason: ExitReason) {

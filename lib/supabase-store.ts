@@ -32,6 +32,7 @@ async function rest<T>(path: string, init: RequestInit): Promise<T> {
 
 // Hàng trong bảng turns -> TurnRecord của app
 type TurnRow = {
+  created_at: string;
   turn_index: number;
   student_text: string;
   stage0_verdict: TurnRecord["stage0_verdict"];
@@ -43,6 +44,7 @@ type TurnRow = {
 
 function toTurn(r: TurnRow): TurnRecord {
   return {
+    created_at: r.created_at,
     turn_index: r.turn_index,
     student_text: r.student_text,
     stage0_verdict: r.stage0_verdict,

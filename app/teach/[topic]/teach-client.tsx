@@ -85,6 +85,9 @@ export default function TeachClient({
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [exitReason, setExitReason] = useState<string | null>(null);
+  // Giây còn phải chờ trước khi được gửi tiếp. Server mới là lớp chặn thật
+  // (api/checkpoint trả 429), đây chỉ để người dùng thấy rõ vì sao nút khoá.
+  const [cooldown, setCooldown] = useState(0);
   const [error, setError] = useState<string | null>(null);
   // Khi agent nhắc xem slide: { page, title } để hiện nút mở trang slide đúng trang.
   const [slideHint, setSlideHint] = useState<{ page: number; title?: string } | null>(null);
@@ -120,6 +123,12 @@ export default function TeachClient({
     return () => clearTimeout(timer);
   }, [coveredIds]);
 
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(id);
+  }, [cooldown]);
+
   const endRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -127,7 +136,7 @@ export default function TeachClient({
 
   async function send() {
     const text = input.trim();
-    if (!text || loading || done) return;
+    if (!text || loading || done || cooldown > 0) return;
 
     setInput("");
     setError(null);
@@ -175,6 +184,7 @@ export default function TeachClient({
       setSlideHint(data.slide ?? null);
       if (data.reply) setTurns((m) => [...m, { role: "agent", text: data.reply }]);
       if (data.done) setDone(true);
+      else setCooldown(3);
     } catch (e) {
       // Rollback tin nhắn vừa gửi khỏi UI để không bị hiển thị lặp
       setTurns((m) => m.slice(0, -1));
@@ -182,6 +192,7 @@ export default function TeachClient({
       setInput(text);
 
       const rawMsg = (e as Error).message || "";
+      if (rawMsg.includes("gửi hơi nhanh")) setCooldown(3);
       if (
         rawMsg.includes("503") ||
         rawMsg.includes("429") ||
@@ -482,11 +493,11 @@ export default function TeachClient({
           />
           <button
             onClick={() => void send()}
-            disabled={loading || done || !input.trim()}
+            disabled={loading || done || cooldown > 0 || !input.trim()}
             className="btn-press inline-flex items-center gap-1.5 rounded-xl px-5 text-sm font-medium disabled:opacity-40"
             style={{ background: "var(--primary)", color: "var(--primary-fg)" }}
           >
-            {t("teach.send")}
+            {cooldown > 0 ? `${cooldown}s` : t("teach.send")}
             <svg
               width="14"
               height="14"
